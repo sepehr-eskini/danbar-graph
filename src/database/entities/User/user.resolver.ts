@@ -1,5 +1,6 @@
 import { generateHttpError } from "@core/functions"
-import { Arg, Mutation, Query, Resolver } from "type-graphql"
+import { AuthMiddleware } from "@core/middlewares"
+import { Arg, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
 
 import { User } from "./user.entity"
 import { CreateUserRq, EditUserRq, FetchUsersListRq, ToggleUserStatus } from "./user.rq"
@@ -7,6 +8,7 @@ import { CreateUserRq, EditUserRq, FetchUsersListRq, ToggleUserStatus } from "./
 @Resolver()
 export class UserResolver {
     @Query(() => [User])
+    @UseMiddleware([AuthMiddleware])
     async fetchUsersList(@Arg("body") { fullname, phone_number }: FetchUsersListRq): Promise<User[]> {
         const users = await User.find({
             where: {
@@ -19,6 +21,7 @@ export class UserResolver {
     }
 
     @Mutation(() => Boolean)
+    @UseMiddleware([AuthMiddleware])
     async toggleUserStatus(@Arg("body") { token }: ToggleUserStatus): Promise<boolean> {
         const user = await User.findOne({ where: { token } })
         if (!user) return false
@@ -30,6 +33,7 @@ export class UserResolver {
     }
 
     @Mutation(() => Boolean)
+    @UseMiddleware([AuthMiddleware])
     async createUser(
         @Arg("body")
         { fullname, phone_number }: CreateUserRq,
@@ -40,6 +44,7 @@ export class UserResolver {
     }
 
     @Mutation(() => Boolean)
+    @UseMiddleware([AuthMiddleware])
     async editUser(@Arg("body") body: EditUserRq): Promise<boolean> {
         const user = await User.findOne({ where: { token: body.token } })
         if (!user) throw generateHttpError("user_not_found")

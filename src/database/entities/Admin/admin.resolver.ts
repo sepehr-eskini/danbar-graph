@@ -18,7 +18,7 @@ export class AdminResolver {
         @Arg("body")
         { username, fullname, phone_number, password }: CreateAdminRq,
     ): Promise<boolean> {
-        const admin = await Admin.create({ username, fullname, phone_number, password }).save()
+        const admin = await Admin.create({ username, fullname, phone_number, password: hashToken(password) }).save()
 
         return !!admin
     }

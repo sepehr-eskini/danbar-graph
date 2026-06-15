@@ -17,7 +17,6 @@ import { ErrorRouter, GraphqlRouter } from "./routers"
 interface I_ApolloContext extends BaseContext {}
 
 export const startServer = async () => {
-    // 1. DB Connection
     await AppDataSource.initialize()
         .then(async () => {
             console.log(`${new Date().toString()}: Connected to DB successfully on ${DB_HOST}:${DB_PORT}`)
