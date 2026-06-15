@@ -1,0 +1,20 @@
+{
+  "editor.tabSize": 4,
+  "editor.detectIndentation": false,
+  "search.exclude": {
+    "package-lock.json": true
+  },
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.addMissingImports": "explicit"
+},
+  // Multiple language settings for json and jsonc files
+  "[json][jsonc][yaml]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.ignorePath": ".gitignore",
+  "typescript.tsdk": "node_modules\\typescript\\lib" // Don't run prettier for files listed in .gitignore
+}

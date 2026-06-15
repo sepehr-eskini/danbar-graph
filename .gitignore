@@ -1,0 +1,11 @@
+/node_modules/
+/build/
+/dist/
+
+
+
+# Package manager lock files
+package-lock.json
+pnpm-lock.yaml
+yarn-lock.yaml
+.env.local
