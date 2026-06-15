@@ -12,7 +12,7 @@ export class CreateAdminRq {
     password: string
 
     @Field()
-    phone_number: number
+    phone_number: string
 }
 
 @InputType()

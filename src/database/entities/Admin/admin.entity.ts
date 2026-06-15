@@ -20,8 +20,8 @@ export class Admin extends BaseEntity {
     fullname: string
 
     @Field()
-    @Column()
-    phone_number: number
+    @Column({ unique: true })
+    phone_number: string
 
     @Column()
     password: string

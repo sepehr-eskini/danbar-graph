@@ -18,6 +18,9 @@ export class AdminResolver {
         @Arg("body")
         { username, fullname, phone_number, password }: CreateAdminRq,
     ): Promise<boolean> {
+        const existingAdmin = await Admin.findOne({ where: { phone_number } })
+        if (existingAdmin) throw generateHttpError("admin_phone_number_already_exists")
+
         const admin = await Admin.create({ username, fullname, phone_number, password: hashToken(password) }).save()
 
         return !!admin

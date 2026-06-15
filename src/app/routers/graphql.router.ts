@@ -1,5 +1,5 @@
 import { generateHttpError, JWT } from "@core/functions"
-import { User, UserRelations } from "@database/entities"
+import { Admin, AdminRelations } from "@database/entities"
 
 export const GraphqlRouter = async ({ req }) => {
     try {
@@ -8,17 +8,17 @@ export const GraphqlRouter = async ({ req }) => {
 
         const token = JWT.verify(authorization)
 
-        const user = await User.findOneOrFail({
-            relations: UserRelations,
+        const admin = await Admin.findOneOrFail({
+            relations: AdminRelations,
             where: {
                 token,
             },
         })
 
-        if (!user) throw generateHttpError("unauthorized")
+        if (!admin) throw generateHttpError("unauthorized")
 
         return {
-            user,
+            admin,
         }
     } catch (error) {
         return {

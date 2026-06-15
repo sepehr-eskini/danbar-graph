@@ -12,7 +12,7 @@ export class CreateUserRq {
     fullname: string
 
     @Field()
-    phone_number: number
+    phone_number: string
 }
 
 @InputType()
@@ -21,7 +21,7 @@ export class FetchUsersListRq {
     fullname?: string
 
     @Field({ nullable: true })
-    phone_number?: number
+    phone_number?: string
 }
 
 @InputType()
@@ -33,5 +33,5 @@ export class EditUserRq {
     fullname?: string
 
     @Field({ nullable: true })
-    phone_number?: number
+    phone_number?: string
 }

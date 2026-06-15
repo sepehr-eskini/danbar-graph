@@ -16,8 +16,8 @@ export class User extends BaseEntity {
     fullname: string
 
     @Field()
-    @Column()
-    phone_number: number
+    @Column({ unique: true })
+    phone_number: string
 
     @Field()
     @Column({ default: true })

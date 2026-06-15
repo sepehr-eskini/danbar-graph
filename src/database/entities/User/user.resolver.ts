@@ -38,6 +38,9 @@ export class UserResolver {
         @Arg("body")
         { fullname, phone_number }: CreateUserRq,
     ): Promise<boolean> {
+        const existingUser = await User.findOne({ where: { phone_number } })
+        if (existingUser) throw generateHttpError("user_phone_number_already_exists")
+
         const user = await User.create({ fullname, phone_number }).save()
 
         return !!user
@@ -45,12 +48,15 @@ export class UserResolver {
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
-    async editUser(@Arg("body") body: EditUserRq): Promise<boolean> {
-        const user = await User.findOne({ where: { token: body.token } })
+    async editUser(@Arg("body") { token, fullname, phone_number }: EditUserRq): Promise<boolean> {
+        const user = await User.findOne({ where: { token } })
+        const existingUser = await User.findOne({ where: { phone_number } })
+
+        if (existingUser) throw generateHttpError("user_phone_number_already_exists")
         if (!user) throw generateHttpError("user_not_found")
 
-        if (body.fullname) user.fullname = body.fullname
-        if (body.phone_number) user.phone_number = body.phone_number
+        if (fullname) user.fullname = fullname
+        if (phone_number) user.phone_number = phone_number
 
         await user.save()
 

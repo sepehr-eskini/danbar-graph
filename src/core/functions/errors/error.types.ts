@@ -5,8 +5,12 @@ export type T_Error =
     | "internal_server_error"
     | "bad_request"
 
+    // Admin
+    | "admin_phone_number_already_exists"
+
     // User
     | "user_not_found"
+    | "user_phone_number_already_exists"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string
