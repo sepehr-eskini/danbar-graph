@@ -8,7 +8,7 @@ export class CreateAdminRq {
     username: string
 
     @Field()
-    fullname: string
+    full_name: string
 
     @Field()
     password: string

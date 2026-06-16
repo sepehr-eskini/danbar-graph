@@ -11,7 +11,12 @@ export type T_Error =
     // User
     | "user_not_found"
     | "user_phone_number_already_exists"
-    | "user_fullname_already_exists"
+    | "user_full_name_already_exists"
+
+    // Personnel
+    | "personnel_not_found"
+    | "personnel_phone_number_already_exists"
+    | "personnel_full_name_already_exists"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string

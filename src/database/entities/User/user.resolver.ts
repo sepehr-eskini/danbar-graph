@@ -4,16 +4,16 @@ import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql
 
 import { Admin } from "../Admin"
 import { User } from "./user.entity"
-import { CreateUserRq, EditUserRq, FetchUsersListRq, ToggleUserStatus } from "./user.rq"
+import { CreateUserRq, EditUserRq, FetchActiveUsersListRq, FetchUsersListRq, ToggleUserStatus } from "./user.rq"
 
 @Resolver()
 export class UserResolver {
     @Query(() => [User])
     @UseMiddleware([AuthMiddleware])
-    async fetchUsersList(@Arg("body") { fullname, phone_number }: FetchUsersListRq): Promise<User[]> {
+    async fetchUsersList(@Arg("body") { full_name, phone_number }: FetchUsersListRq): Promise<User[]> {
         const users = await User.find({
             where: {
-                ...(fullname && { fullname: fullname.trim() }),
+                ...(full_name && { full_name: full_name.trim() }),
                 ...(phone_number && { phone_number }),
             },
             order: { created_at: "DESC" },
@@ -24,11 +24,12 @@ export class UserResolver {
 
     @Query(() => [User])
     @UseMiddleware([AuthMiddleware])
-    async fetchActiveUsersList(@Arg("body") { fullname, phone_number }: FetchUsersListRq): Promise<User[]> {
+    async fetchActiveUsersList(@Arg("body") { full_name, phone_number }: FetchActiveUsersListRq): Promise<User[]> {
         const users = await User.find({
             where: {
-                ...(fullname && { fullname: fullname.trim() }),
+                ...(full_name && { full_name: full_name.trim() }),
                 ...(phone_number && { phone_number }),
+                is_active: true,
             },
             order: { created_at: "DESC" },
         })
@@ -53,32 +54,32 @@ export class UserResolver {
     async createUser(
         @Ctx("admin") admin: Admin,
         @Arg("body")
-        { fullname, phone_number }: CreateUserRq,
+        { full_name, phone_number }: CreateUserRq,
     ): Promise<boolean> {
         const existingUserWithPhoneNumber = await User.findOne({ where: { phone_number } })
         if (existingUserWithPhoneNumber) throw generateHttpError("user_phone_number_already_exists")
 
-        const existingUserWithFullname = await User.findOne({ where: { fullname } })
-        if (existingUserWithFullname) throw generateHttpError("user_fullname_already_exists")
+        const existingUserWithFullName = await User.findOne({ where: { full_name } })
+        if (existingUserWithFullName) throw generateHttpError("user_full_name_already_exists")
 
-        const user = await User.create({ fullname, phone_number, admin_token: admin.token }).save()
+        const user = await User.create({ full_name, phone_number, admin_token: admin.token }).save()
 
         return !!user
     }
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
-    async editUser(@Arg("body") { token, fullname, phone_number }: EditUserRq): Promise<boolean> {
+    async editUser(@Arg("body") { token, full_name, phone_number }: EditUserRq): Promise<boolean> {
         const user = await User.findOne({ where: { token } })
         if (!user) throw generateHttpError("user_not_found")
 
         const existingUserWithPhoneNumber = await User.findOne({ where: { phone_number } })
         if (existingUserWithPhoneNumber) throw generateHttpError("user_phone_number_already_exists")
 
-        const existingUserWithFullname = await User.findOne({ where: { fullname } })
-        if (existingUserWithFullname) throw generateHttpError("user_fullname_already_exists")
+        const existingUserWithFullName = await User.findOne({ where: { full_name } })
+        if (existingUserWithFullName) throw generateHttpError("user_full_name_already_exists")
 
-        if (fullname) user.fullname = fullname
+        if (full_name) user.full_name = full_name
         if (phone_number) user.phone_number = phone_number
 
         await user.save()

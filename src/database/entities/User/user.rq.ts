@@ -9,7 +9,7 @@ export class ToggleUserStatus {
 @InputType()
 export class CreateUserRq {
     @Field()
-    fullname: string
+    full_name: string
 
     @Field()
     phone_number: string
@@ -18,7 +18,16 @@ export class CreateUserRq {
 @InputType()
 export class FetchUsersListRq {
     @Field({ nullable: true })
-    fullname?: string
+    full_name?: string
+
+    @Field({ nullable: true })
+    phone_number?: string
+}
+
+@InputType()
+export class FetchActiveUsersListRq {
+    @Field({ nullable: true })
+    full_name?: string
 
     @Field({ nullable: true })
     phone_number?: string
@@ -30,7 +39,7 @@ export class EditUserRq {
     token: string
 
     @Field({ nullable: true })
-    fullname?: string
+    full_name?: string
 
     @Field({ nullable: true })
     phone_number?: string
