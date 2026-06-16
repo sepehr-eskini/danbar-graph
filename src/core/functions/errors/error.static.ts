@@ -10,5 +10,9 @@ export const ErrorMessages: T_ErrorMessages = {
 
         // User
         user_not_found: "کاربر در سیستم وجود ندارد",
+        user_phone_number_already_exists: "شماره تلفن کاربر وارد شده از قبل در سیستم وجود دارد",
+
+        // Admin
+        admin_phone_number_already_exists: "شماره تلفن ادمین وارد شده از قبل در سیستم وجود دارد",
     },
 }
