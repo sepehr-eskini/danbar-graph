@@ -12,7 +12,7 @@ export class User extends BaseEntity {
     token: string
 
     @Field()
-    @Column()
+    @Column({ unique: true })
     fullname: string
 
     @Field()
@@ -22,6 +22,10 @@ export class User extends BaseEntity {
     @Field()
     @Column({ default: true })
     is_active: boolean
+
+    @Field()
+    @Column()
+    admin_token: string
 
     @CreateDateColumn()
     created_at: Date
