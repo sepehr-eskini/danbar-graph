@@ -13,6 +13,6 @@ export const ErrorMessages: T_ErrorMessages = {
         user_phone_number_already_exists: "شماره تلفن کاربر وارد شده از قبل در سیستم وجود دارد",
 
         // Admin
-        admin_phone_number_already_exists: "شماره تلفن ادمین وارد شده از قبل در سیستم وجود دارد",
+        admin_already_exists: "ادمین با مشخصات وارد شده از قبل در سیستم وجود دارد",
     },
 }

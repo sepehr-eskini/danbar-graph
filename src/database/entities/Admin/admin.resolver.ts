@@ -16,12 +16,18 @@ export class AdminResolver {
     @Mutation(() => Boolean)
     async createAdmin(
         @Arg("body")
-        { username, fullname, phone_number, password }: CreateAdminRq,
+        { username, fullname, phone_number, password, permissions }: CreateAdminRq,
     ): Promise<boolean> {
-        const existingAdmin = await Admin.findOne({ where: { phone_number } })
-        if (existingAdmin) throw generateHttpError("admin_phone_number_already_exists")
+        const existingAdmin = await Admin.findOne({ where: [{ phone_number }, { fullname }, { username }] })
+        if (existingAdmin) throw generateHttpError("admin_already_exists")
 
-        const admin = await Admin.create({ username, fullname, phone_number, password: hashToken(password) }).save()
+        const admin = await Admin.create({
+            username,
+            fullname,
+            phone_number,
+            password: hashToken(password),
+            permissions,
+        }).save()
 
         return !!admin
     }

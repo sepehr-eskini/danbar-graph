@@ -1,6 +1,8 @@
 import { Field, ObjectType } from "type-graphql"
 import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 
+import { E_AdminPermission } from "./admin.types"
+
 @Entity("tbl_admin")
 @ObjectType()
 export class Admin extends BaseEntity {
@@ -12,19 +14,22 @@ export class Admin extends BaseEntity {
     token: string
 
     @Field()
-    @Column()
+    @Column({ unique: true })
     username: string
 
     @Field()
-    @Column()
+    @Column({ unique: true })
     fullname: string
+
+    @Column()
+    password: string
 
     @Field()
     @Column({ unique: true })
     phone_number: string
 
-    @Column()
-    password: string
+    @Column({ type: "enum", enum: E_AdminPermission, array: true })
+    permissions: E_AdminPermission[]
 
     @Field()
     @Column({ default: true })

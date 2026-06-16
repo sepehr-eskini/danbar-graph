@@ -1,5 +1,7 @@
 import { Field, InputType } from "type-graphql"
 
+import { E_AdminPermission } from "./admin.types"
+
 @InputType()
 export class CreateAdminRq {
     @Field()
@@ -13,6 +15,9 @@ export class CreateAdminRq {
 
     @Field()
     phone_number: string
+
+    @Field(() => [E_AdminPermission])
+    permissions: E_AdminPermission[]
 }
 
 @InputType()

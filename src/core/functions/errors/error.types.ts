@@ -6,7 +6,7 @@ export type T_Error =
     | "bad_request"
 
     // Admin
-    | "admin_phone_number_already_exists"
+    | "admin_already_exists"
 
     // User
     | "user_not_found"
