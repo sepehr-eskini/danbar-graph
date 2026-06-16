@@ -20,5 +20,11 @@ export const ErrorMessages: T_ErrorMessages = {
         personnel_not_found: "پرسنل در سیستم وجود ندارد",
         personnel_phone_number_already_exists: "شماره تلفن پرسنل وارد شده از قبل در سیستم وجود دارد",
         personnel_full_name_already_exists: "نام پرسنل وارد شده از قبل در سیستم وجود دارد",
+
+        // TimePeriod
+        time_period_not_found: "بازه زمانی در سیستم وجود ندارد",
+        invalid_time_format: "فرمت وارد شده معتبر نیست",
+        time_period_title_already_exists: "عنوان بازه زمانی وارد شده از قبل در سیستم وجود دارد",
+        time_period_pair_already_exists: "بازه زمانی با زمان شروع و پایان وارد شده از قبل در سیستم وجود دارد",
     },
 }

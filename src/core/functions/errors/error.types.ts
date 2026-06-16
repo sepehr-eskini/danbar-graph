@@ -18,6 +18,12 @@ export type T_Error =
     | "personnel_phone_number_already_exists"
     | "personnel_full_name_already_exists"
 
+    // TimePeriod
+    | "time_period_not_found"
+    | "invalid_time_format"
+    | "time_period_title_already_exists"
+    | "time_period_pair_already_exists"
+
 export type T_ErrorMessage = {
     [key in T_Error]: string
 }

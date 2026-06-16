@@ -1,5 +1,5 @@
-import { initPeriod } from "./period.init"
+import { initTimePeriod } from "./time-period.init"
 
 export const databaseInitialization = async () => {
-    await initPeriod()
+    await initTimePeriod()
 }
