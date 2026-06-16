@@ -24,6 +24,10 @@ export type T_Error =
     | "time_period_title_already_exists"
     | "time_period_pair_already_exists"
 
+    // Class
+    | "class_not_found"
+    | "class_title_type_level_sessions_already_exists"
+
 export type T_ErrorMessage = {
     [key in T_Error]: string
 }

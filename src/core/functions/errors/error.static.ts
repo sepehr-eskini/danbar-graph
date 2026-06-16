@@ -26,5 +26,10 @@ export const ErrorMessages: T_ErrorMessages = {
         invalid_time_format: "فرمت وارد شده معتبر نیست",
         time_period_title_already_exists: "عنوان بازه زمانی وارد شده از قبل در سیستم وجود دارد",
         time_period_pair_already_exists: "بازه زمانی با زمان شروع و پایان وارد شده از قبل در سیستم وجود دارد",
+
+        // Class
+        class_not_found: "کلاس در سیستم وجود ندارد",
+        class_title_type_level_sessions_already_exists:
+            "کلاسی با عنوان، نوع، سطح و تعداد جلسات وارد شده از قبل در سیستم وجود دارد",
     },
 }
