@@ -29,7 +29,7 @@ export const ErrorMessages: T_ErrorMessages = {
 
         // Class
         class_not_found: "کلاس در سیستم وجود ندارد",
-        class_title_type_level_sessions_already_exists:
-            "کلاسی با عنوان، نوع، سطح و تعداد جلسات وارد شده از قبل در سیستم وجود دارد",
+        class_title_type_sessions_already_exists:
+            "کلاسی با عنوان، نوع و تعداد جلسات وارد شده از قبل در سیستم وجود دارد",
     },
 }

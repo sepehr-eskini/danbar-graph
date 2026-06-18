@@ -1,11 +1,11 @@
 import { Field, ObjectType } from "type-graphql"
 import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm"
 
-import { E_ClassLevel, E_ClassType } from "./class.types"
+import { E_ClassType } from "./class.types"
 
 @Entity("tbl_class")
 @ObjectType()
-@Unique(["title", "type", "level", "sessions"])
+@Unique(["title", "type", "sessions"])
 export class Class extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
@@ -25,10 +25,6 @@ export class Class extends BaseEntity {
     @Field()
     @Column({ type: "enum", enum: E_ClassType })
     type: E_ClassType
-
-    @Field()
-    @Column({ type: "enum", enum: E_ClassLevel })
-    level: E_ClassLevel
 
     @Field()
     @Column({ type: "numeric" })

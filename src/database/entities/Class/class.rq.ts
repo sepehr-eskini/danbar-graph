@@ -1,6 +1,6 @@
 import { Field, InputType } from "type-graphql"
 
-import { E_ClassLevel, E_ClassType } from "./class.types"
+import { E_ClassType } from "./class.types"
 
 @InputType()
 export class CreateClassRq {
@@ -12,9 +12,6 @@ export class CreateClassRq {
 
     @Field(() => E_ClassType)
     type: E_ClassType
-
-    @Field(() => E_ClassLevel)
-    level: E_ClassLevel
 
     @Field()
     price: number
@@ -34,9 +31,6 @@ export class FetchClassListRq {
     @Field(() => E_ClassType, { nullable: true })
     type?: E_ClassType
 
-    @Field(() => E_ClassLevel, { nullable: true })
-    level?: E_ClassLevel
-
     @Field({ nullable: true })
     price?: number
 
@@ -51,9 +45,6 @@ export class FetchActiveClassListRq {
 
     @Field(() => E_ClassType, { nullable: true })
     type?: E_ClassType
-
-    @Field(() => E_ClassLevel, { nullable: true })
-    level?: E_ClassLevel
 
     @Field({ nullable: true })
     price?: number
@@ -75,9 +66,6 @@ export class EditClassRq {
 
     @Field(() => E_ClassType, { nullable: true })
     type?: E_ClassType
-
-    @Field(() => E_ClassLevel, { nullable: true })
-    level?: E_ClassLevel
 
     @Field({ nullable: true })
     price?: number

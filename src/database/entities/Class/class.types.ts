@@ -7,11 +7,4 @@ export enum E_ClassType {
     PRIVATE = "PRIVATE",
 }
 
-export enum E_ClassLevel {
-    BEGINNER = "BEGINNER",
-    INTERMEDIATE = "INTERMEDIATE",
-    ADVANCED = "ADVANCED",
-}
-
 registerEnumType(E_ClassType, { name: "E_ClassType" })
-registerEnumType(E_ClassLevel, { name: "E_ClassLevel" })

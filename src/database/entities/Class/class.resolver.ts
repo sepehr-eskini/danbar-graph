@@ -10,12 +10,11 @@ import { CreateClassRq, EditClassRq, FetchClassListRq, ToggleClassStatus } from 
 export class ClassResolver {
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchClassList(@Arg("body") { title, type, level, price, sessions }: FetchClassListRq): Promise<Class[]> {
+    async fetchClassList(@Arg("body") { title, type, price, sessions }: FetchClassListRq): Promise<Class[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: title.trim() }),
                 ...(type && { type }),
-                ...(level && { level }),
                 ...(price !== undefined && { price }),
                 ...(sessions !== undefined && { sessions }),
             },
@@ -27,14 +26,11 @@ export class ClassResolver {
 
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchActiveClassList(
-        @Arg("body") { title, type, level, price, sessions }: FetchClassListRq,
-    ): Promise<Class[]> {
+    async fetchActiveClassList(@Arg("body") { title, type, price, sessions }: FetchClassListRq): Promise<Class[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: title.trim() }),
                 ...(type && { type }),
-                ...(level && { level }),
                 ...(price !== undefined && { price }),
                 ...(sessions !== undefined && { sessions }),
                 is_active: true,
@@ -61,16 +57,15 @@ export class ClassResolver {
     @UseMiddleware([AuthMiddleware])
     async createClass(
         @Ctx("admin") admin: Admin,
-        @Arg("body") { title, sessions, type, level, price }: CreateClassRq,
+        @Arg("body") { title, sessions, type, price }: CreateClassRq,
     ): Promise<boolean> {
-        const existingClassWithCombination = await Class.findOne({ where: { title, type, level, sessions } })
-        if (existingClassWithCombination) throw generateHttpError("class_title_type_level_sessions_already_exists")
+        const existingClassWithCombination = await Class.findOne({ where: { title, type, sessions } })
+        if (existingClassWithCombination) throw generateHttpError("class_title_type_sessions_already_exists")
 
         const classEntity = await Class.create({
             title,
             sessions,
             type,
-            level,
             price,
             admin_token: admin.token,
         }).save()
@@ -80,37 +75,33 @@ export class ClassResolver {
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
-    async editClass(@Arg("body") { token, title, sessions, type, level, price }: EditClassRq): Promise<boolean> {
+    async editClass(@Arg("body") { token, title, sessions, type, price }: EditClassRq): Promise<boolean> {
         const classEntity = await Class.findOne({ where: { token } })
         if (!classEntity) throw generateHttpError("class_not_found")
 
         const newType = type || classEntity.type
-        const newLevel = level || classEntity.level
         const newSessions = sessions !== undefined ? sessions : classEntity.sessions
 
         if (
             (title && title.trim() !== classEntity.title) ||
             (type && type !== classEntity.type) ||
-            (level && level !== classEntity.level) ||
             (sessions !== undefined && sessions !== classEntity.sessions)
         ) {
             const existingWithCombination = await Class.findOne({
                 where: {
                     title: title ? title.trim() : classEntity.title,
                     type: newType,
-                    level: newLevel,
                     sessions: newSessions,
                 },
             })
 
             if (existingWithCombination && existingWithCombination.token !== token)
-                throw generateHttpError("class_title_type_level_sessions_already_exists")
+                throw generateHttpError("class_title_type_sessions_already_exists")
         }
 
         if (title) classEntity.title = title
         if (sessions !== undefined) classEntity.sessions = sessions
         if (type) classEntity.type = type
-        if (level) classEntity.level = level
         if (price !== undefined) classEntity.price = price
 
         await classEntity.save()

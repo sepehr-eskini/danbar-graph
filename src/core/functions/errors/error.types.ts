@@ -26,7 +26,7 @@ export type T_Error =
 
     // Class
     | "class_not_found"
-    | "class_title_type_level_sessions_already_exists"
+    | "class_title_type_sessions_already_exists"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string
