@@ -7,8 +7,8 @@ export class CreateClassRq {
     @Field()
     title: string
 
-    @Field()
-    sessions: number
+    @Field(() => [String])
+    session_tokens: string[]
 
     @Field(() => E_ClassType)
     type: E_ClassType
@@ -35,7 +35,7 @@ export class FetchClassListRq {
     price?: number
 
     @Field({ nullable: true })
-    sessions?: number
+    session_token?: string
 }
 
 @InputType()
@@ -50,7 +50,7 @@ export class FetchActiveClassListRq {
     price?: number
 
     @Field({ nullable: true })
-    sessions?: number
+    session_token?: string
 }
 
 @InputType()
@@ -61,8 +61,8 @@ export class EditClassRq {
     @Field({ nullable: true })
     title?: string
 
-    @Field({ nullable: true })
-    sessions?: number
+    @Field(() => [String], { nullable: true })
+    sessions?: string[]
 
     @Field(() => E_ClassType, { nullable: true })
     type?: E_ClassType
