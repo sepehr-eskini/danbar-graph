@@ -5,7 +5,14 @@ import { expressMiddleware } from "@apollo/server/express4"
 import { formatError } from "@core/functions"
 import { APP_PORT, DB_HOST, DB_PORT, jobScheduler } from "@core/utilities"
 import { AppDataSource } from "@database/connections"
-import { AdminResolver, ClassResolver, PersonnelResolver, TimePeriodResolver, UserResolver } from "@database/entities"
+import {
+    AdminResolver,
+    ClassResolver,
+    PersonnelResolver,
+    SessionResolver,
+    TimePeriodResolver,
+    UserResolver,
+} from "@database/entities"
 import cors from "cors"
 import express from "express"
 import { createServer } from "http"
@@ -26,7 +33,7 @@ export const startServer = async () => {
         .catch(err => console.log(`${new Date().toString()}: Error connecting to DB:`, err))
 
     const schema = await buildSchema({
-        resolvers: [AdminResolver, UserResolver, PersonnelResolver, TimePeriodResolver, ClassResolver],
+        resolvers: [AdminResolver, UserResolver, PersonnelResolver, TimePeriodResolver, ClassResolver, SessionResolver],
         validate: { forbidUnknownValues: false },
     })
 
