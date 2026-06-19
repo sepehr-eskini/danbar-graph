@@ -59,6 +59,7 @@ export class PriceResolver {
             sessions_count,
             price,
             is_active: is_active ?? true,
+            admin_token: admin.token,
         }).save()
 
         return !!priceEntity

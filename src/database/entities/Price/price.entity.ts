@@ -44,6 +44,10 @@ export class Price extends BaseEntity {
     @Column({ default: true })
     is_active: boolean
 
+    @Field()
+    @Column()
+    admin_token: string
+
     @CreateDateColumn()
     created_at: Date
 
