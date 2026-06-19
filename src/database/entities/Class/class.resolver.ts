@@ -14,12 +14,11 @@ import { CreateClassRq, EditClassRq, FetchClassListRq, FetchClassPricesRq, Toggl
 export class ClassResolver {
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchClassList(@Arg("body") { title, type, price, instructor_token }: FetchClassListRq): Promise<Class[]> {
+    async fetchClassList(@Arg("body") { title, type, instructor_token }: FetchClassListRq): Promise<Class[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: title.trim() }),
                 ...(type && { type }),
-                ...(price !== undefined && { price }),
                 ...(instructor_token && { instructor_token }),
             },
             relations: ["sessions", "instructor", "prices"],
@@ -31,14 +30,11 @@ export class ClassResolver {
 
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchActiveClassList(
-        @Arg("body") { title, type, price, instructor_token }: FetchClassListRq,
-    ): Promise<Class[]> {
+    async fetchActiveClassList(@Arg("body") { title, type, instructor_token }: FetchClassListRq): Promise<Class[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: title.trim() }),
                 ...(type && { type }),
-                ...(price !== undefined && { price }),
                 ...(instructor_token && { instructor_token }),
                 is_active: true,
             },
@@ -82,7 +78,7 @@ export class ClassResolver {
     @UseMiddleware([AuthMiddleware])
     async createClass(
         @Ctx("admin") admin: Admin,
-        @Arg("body") { title, session_tokens, type, instructor_token, price }: CreateClassRq,
+        @Arg("body") { title, session_tokens, type, instructor_token }: CreateClassRq,
     ): Promise<boolean> {
         const instructor = await Personnel.findOne({ where: { token: instructor_token } })
         if (!instructor) throw generateHttpError("instructor_not_found")
@@ -100,7 +96,6 @@ export class ClassResolver {
             sessions,
             type,
             instructor_token,
-            price,
             admin_token: admin.token,
         }).save()
 
@@ -110,7 +105,7 @@ export class ClassResolver {
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
     async editClass(
-        @Arg("body") { token, title, session_tokens, type, instructor_token, price }: EditClassRq,
+        @Arg("body") { token, title, session_tokens, type, instructor_token }: EditClassRq,
     ): Promise<boolean> {
         const classEntity = await Class.findOne({ where: { token }, relations: ["sessions"] })
         if (!classEntity) throw generateHttpError("class_not_found")
@@ -143,7 +138,6 @@ export class ClassResolver {
         if (title) classEntity.title = title
         if (type) classEntity.type = type
         if (instructor_token) classEntity.instructor_token = instructor_token
-        if (price !== undefined) classEntity.price = price
 
         if (session_tokens && session_tokens.length > 0) {
             const sessions = await Session.find({ where: { token: In(session_tokens) } })

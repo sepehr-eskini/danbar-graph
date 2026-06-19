@@ -56,10 +56,6 @@ export class Class extends BaseEntity {
     @JoinColumn({ name: "instructor_token", referencedColumnName: "token" })
     instructor: Personnel
 
-    @Field()
-    @Column({ type: "numeric" })
-    price: number
-
     @Field(() => [Price])
     @OneToMany(() => Price, price => price.class)
     prices: Price[]

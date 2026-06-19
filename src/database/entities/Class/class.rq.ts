@@ -15,9 +15,6 @@ export class CreateClassRq {
 
     @Field()
     instructor_token: string
-
-    @Field()
-    price: number
 }
 
 @InputType()
@@ -35,9 +32,6 @@ export class FetchClassListRq {
     type?: E_ClassType
 
     @Field({ nullable: true })
-    price?: number
-
-    @Field({ nullable: true })
     instructor_token?: string
 }
 
@@ -48,9 +42,6 @@ export class FetchActiveClassListRq {
 
     @Field(() => E_ClassType, { nullable: true })
     type?: E_ClassType
-
-    @Field({ nullable: true })
-    price?: number
 
     @Field({ nullable: true })
     instructor_token?: string
@@ -81,7 +72,4 @@ export class EditClassRq {
 
     @Field({ nullable: true })
     instructor_token?: string
-
-    @Field({ nullable: true })
-    price?: number
 }
