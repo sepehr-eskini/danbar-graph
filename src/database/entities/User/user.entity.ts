@@ -1,5 +1,15 @@
 import { Field, ObjectType } from "type-graphql"
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
+import {
+    BaseEntity,
+    Column,
+    CreateDateColumn,
+    Entity,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm"
+
+import { Register } from "../Register"
 
 @Entity("tbl_user")
 @ObjectType()
@@ -22,6 +32,10 @@ export class User extends BaseEntity {
     @Field()
     @Column({ default: true })
     is_active: boolean
+
+    @Field(() => [Register], { nullable: true })
+    @OneToMany(() => Register, register => register.user)
+    registers: Register[]
 
     @Field()
     @Column()

@@ -3,13 +3,13 @@ import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
 
 import { Admin } from "../Admin"
-import { Class } from "../Class/class.entity"
-import { Price } from "../Price/price.entity"
-import { Schedule } from "../Schedule/schedule.entity"
-import { E_ScheduleStatus } from "../Schedule/schedule.types"
-import { User } from "../User/user.entity"
+import { Class } from "../Class"
+import { Price } from "../Price"
+import { E_ScheduleStatus, Schedule } from "../Schedule"
+import { User } from "../User"
 import { Register } from "./register.entity"
 import { CreateRegisterRq, EditRegisterRq, FetchRegisterListRq } from "./register.rq"
+import { UserWithUnsetScheduleInfo } from "./register.rs"
 
 @Resolver()
 export class RegisterResolver {
@@ -96,5 +96,39 @@ export class RegisterResolver {
         await register.save()
 
         return true
+    }
+
+    @Query(() => [UserWithUnsetScheduleInfo])
+    @UseMiddleware([AuthMiddleware])
+    async getUsersWithUnsetScheduleInfo(): Promise<UserWithUnsetScheduleInfo[]> {
+        const users = await User.find({
+            relations: ["registers", "registers.schedules", "registers.class"],
+        })
+
+        return users
+            .map(user => {
+                const unsetSchedules =
+                    user.registers?.flatMap(r => r.schedules || []).filter(s => s.status === E_ScheduleStatus.UNSET) ||
+                    []
+
+                const latestUnset =
+                    unsetSchedules.length > 0
+                        ? unsetSchedules.reduce((a, b) =>
+                              new Date(a.submission_date) > new Date(b.submission_date) ? a : b,
+                          )
+                        : null
+
+                const register = latestUnset
+                    ? user.registers?.find(r => r.schedules?.some(s => s.token === latestUnset.token))
+                    : null
+
+                return {
+                    user,
+                    unset_count: unsetSchedules.length,
+                    last_unset_class: register?.class || null,
+                    last_unset_submission_date: latestUnset?.submission_date || null,
+                }
+            })
+            .sort((a, b) => a.unset_count - b.unset_count)
     }
 }
