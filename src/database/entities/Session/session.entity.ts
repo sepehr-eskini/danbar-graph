@@ -27,10 +27,11 @@ export class Session extends BaseEntity {
     @Column({ type: "enum", enum: E_Day })
     day: E_Day
 
-    @Field(() => TimePeriod)
-    @Column({ type: "uuid", nullable: true })
+    @Field()
+    @Column({ type: "uuid" })
     time_period_token: string
 
+    @Field(() => TimePeriod)
     @ManyToOne(() => TimePeriod, { eager: true })
     @JoinColumn({ name: "time_period_token", referencedColumnName: "token" })
     time_period: TimePeriod
