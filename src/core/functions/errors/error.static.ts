@@ -36,5 +36,9 @@ export const ErrorMessages: T_ErrorMessages = {
         // Class
         class_not_found: "کلاس در سیستم وجود ندارد",
         class_title_type_instructor_already_exists: "کلاسی با عنوان، نوع و مربی وارد شده از قبل در سیستم وجود دارد",
+
+        // Price
+        price_not_found: "قیمت در سیستم وجود ندارد",
+        price_sessions_count_price_already_exists: "قیمتی با تعداد سانس و قیمت وارد شده از قبل در سیستم وجود دارد",
     },
 }

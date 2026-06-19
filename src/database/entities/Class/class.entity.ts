@@ -8,12 +8,14 @@ import {
     JoinTable,
     ManyToMany,
     ManyToOne,
+    OneToMany,
     PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn,
 } from "typeorm"
 
 import { Personnel } from "../Personnel/personnel.entity"
+import { Price } from "../Price/price.entity"
 import { Session } from "../Session/session.entity"
 import { E_ClassType } from "./class.types"
 
@@ -58,6 +60,10 @@ export class Class extends BaseEntity {
     @Column({ type: "numeric" })
     price: number
 
+    @Field(() => [Price])
+    @OneToMany(() => Price, price => price.class)
+    prices: Price[]
+
     @Field()
     @Column({ default: true })
     is_active: boolean
@@ -73,4 +79,4 @@ export class Class extends BaseEntity {
     updated_at: Date
 }
 
-export const ClassRelations = ["sessions", "instructor"]
+export const ClassRelations = ["sessions", "instructor", "prices"]

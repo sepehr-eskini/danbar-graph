@@ -34,6 +34,10 @@ export type T_Error =
     | "class_not_found"
     | "class_title_type_instructor_already_exists"
 
+    // Price
+    | "price_not_found"
+    | "price_sessions_count_price_already_exists"
+
 export type T_ErrorMessage = {
     [key in T_Error]: string
 }

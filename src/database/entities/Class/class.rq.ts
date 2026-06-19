@@ -57,6 +57,15 @@ export class FetchActiveClassListRq {
 }
 
 @InputType()
+export class FetchClassPricesRq {
+    @Field()
+    class_token: string
+
+    @Field({ nullable: true })
+    is_active?: boolean
+}
+
+@InputType()
 export class EditClassRq {
     @Field()
     token: string

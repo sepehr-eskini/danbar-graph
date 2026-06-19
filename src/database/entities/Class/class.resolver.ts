@@ -5,9 +5,10 @@ import { In } from "typeorm"
 
 import { Admin } from "../Admin"
 import { Personnel } from "../Personnel/personnel.entity"
+import { Price } from "../Price/price.entity"
 import { Session } from "../Session/session.entity"
 import { Class } from "./class.entity"
-import { CreateClassRq, EditClassRq, FetchClassListRq, ToggleClassStatus } from "./class.rq"
+import { CreateClassRq, EditClassRq, FetchClassListRq, FetchClassPricesRq, ToggleClassStatus } from "./class.rq"
 
 @Resolver()
 export class ClassResolver {
@@ -21,6 +22,7 @@ export class ClassResolver {
                 ...(price !== undefined && { price }),
                 ...(instructor_token && { instructor_token }),
             },
+            relations: ["sessions", "instructor", "prices"],
             order: { created_at: "DESC" },
         })
 
@@ -40,10 +42,28 @@ export class ClassResolver {
                 ...(instructor_token && { instructor_token }),
                 is_active: true,
             },
+            relations: ["sessions", "instructor", "prices"],
             order: { created_at: "DESC" },
         })
 
         return classes
+    }
+
+    @Query(() => [Price])
+    @UseMiddleware([AuthMiddleware])
+    async fetchClassPrices(@Arg("body") { class_token, is_active }: FetchClassPricesRq): Promise<Price[]> {
+        const classEntity = await Class.findOne({ where: { token: class_token } })
+        if (!classEntity) throw generateHttpError("class_not_found")
+
+        const prices = await Price.find({
+            where: {
+                class_token,
+                ...(is_active !== undefined && { is_active }),
+            },
+            order: { created_at: "DESC" },
+        })
+
+        return prices
     }
 
     @Mutation(() => Boolean)
