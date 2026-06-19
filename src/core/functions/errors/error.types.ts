@@ -17,6 +17,7 @@ export type T_Error =
     | "personnel_not_found"
     | "personnel_phone_number_already_exists"
     | "personnel_full_name_already_exists"
+    | "instructor_not_found"
 
     // TimePeriod
     | "time_period_not_found"
@@ -31,7 +32,7 @@ export type T_Error =
 
     // Class
     | "class_not_found"
-    | "class_title_type_already_exists"
+    | "class_title_type_instructor_already_exists"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string

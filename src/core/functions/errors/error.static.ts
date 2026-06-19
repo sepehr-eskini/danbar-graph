@@ -20,6 +20,7 @@ export const ErrorMessages: T_ErrorMessages = {
         personnel_not_found: "پرسنل در سیستم وجود ندارد",
         personnel_phone_number_already_exists: "شماره تلفن پرسنل وارد شده از قبل در سیستم وجود دارد",
         personnel_full_name_already_exists: "نام پرسنل وارد شده از قبل در سیستم وجود دارد",
+        instructor_not_found: "مربی در سیستم وجود ندارد",
 
         // TimePeriod
         time_period_not_found: "بازه زمانی در سیستم وجود ندارد",
@@ -34,6 +35,6 @@ export const ErrorMessages: T_ErrorMessages = {
 
         // Class
         class_not_found: "کلاس در سیستم وجود ندارد",
-        class_title_type_already_exists: "کلاسی با عنوان و نوع وارد شده از قبل در سیستم وجود دارد",
+        class_title_type_instructor_already_exists: "کلاسی با عنوان، نوع و مربی وارد شده از قبل در سیستم وجود دارد",
     },
 }

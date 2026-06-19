@@ -10,7 +10,7 @@ export class Personnel extends BaseEntity {
     id: number
 
     @Field()
-    @Column({ generated: "uuid" })
+    @Column({ type: "uuid", generated: "uuid", unique: true })
     token: string
 
     @Field()

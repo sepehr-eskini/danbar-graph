@@ -4,19 +4,22 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     JoinTable,
     ManyToMany,
+    ManyToOne,
     PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn,
 } from "typeorm"
 
+import { Personnel } from "../Personnel/personnel.entity"
 import { Session } from "../Session/session.entity"
 import { E_ClassType } from "./class.types"
 
 @Entity("tbl_class")
 @ObjectType()
-@Unique(["title", "type"])
+@Unique(["title", "type", "instructor_token"])
 export class Class extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
@@ -43,6 +46,15 @@ export class Class extends BaseEntity {
     type: E_ClassType
 
     @Field()
+    @Column({ type: "uuid" })
+    instructor_token: string
+
+    @Field(() => Personnel)
+    @ManyToOne(() => Personnel, { eager: true })
+    @JoinColumn({ name: "instructor_token", referencedColumnName: "token" })
+    instructor: Personnel
+
+    @Field()
     @Column({ type: "numeric" })
     price: number
 
@@ -61,4 +73,4 @@ export class Class extends BaseEntity {
     updated_at: Date
 }
 
-export const ClassRelations = ["sessions"]
+export const ClassRelations = ["sessions", "instructor"]
