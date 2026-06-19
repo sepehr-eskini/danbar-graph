@@ -38,6 +38,12 @@ export type T_Error =
     | "price_not_found"
     | "price_sessions_count_price_already_exists"
 
+    // Register
+    | "register_not_found"
+
+    // Schedule
+    | "schedule_not_found"
+
 export type T_ErrorMessage = {
     [key in T_Error]: string
 }

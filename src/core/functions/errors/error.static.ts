@@ -40,5 +40,11 @@ export const ErrorMessages: T_ErrorMessages = {
         // Price
         price_not_found: "قیمت در سیستم وجود ندارد",
         price_sessions_count_price_already_exists: "کلاسی با تعداد سانس و قیمت وارد شده از قبل در سیستم وجود دارد",
+
+        // Register
+        register_not_found: "ثبت نام در سیستم وجود ندارد",
+
+        // Schedule
+        schedule_not_found: "برنامه در سیستم وجود ندارد",
     },
 }
