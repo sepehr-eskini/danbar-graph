@@ -1,6 +1,6 @@
 import { TimePeriod } from "@database/entities"
 
-const DEFAULT_TIME_SLOTS = [
+const DEFAULT_TIME_PERIODS = [
     { from_time: "06:00", to_time: "07:00", title: "06:00-07:00" },
     { from_time: "06:30", to_time: "07:30", title: "06:30-07:30" },
     { from_time: "07:00", to_time: "08:00", title: "07:00-08:00" },
@@ -76,10 +76,10 @@ export const initTimePeriod = async () => {
     const timePeriodCount = await TimePeriod.count({})
 
     if (timePeriodCount === 0) {
-        const timePeriods = DEFAULT_TIME_SLOTS.map(slot => ({
-            title: slot.title,
-            from_time: slot.from_time,
-            to_time: slot.to_time,
+        const timePeriods = DEFAULT_TIME_PERIODS.map(timePeriod => ({
+            title: timePeriod.title,
+            from_time: timePeriod.from_time,
+            to_time: timePeriod.to_time,
             admin_token: "system_initialization",
             is_active: true,
         }))
