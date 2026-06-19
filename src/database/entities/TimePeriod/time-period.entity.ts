@@ -1,15 +1,14 @@
 import { Field, ObjectType } from "type-graphql"
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm"
+import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 
 @Entity("tbl_time_period")
 @ObjectType()
-@Unique(["from_time", "to_time"])
 export class TimePeriod extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
 
     @Field()
-    @Column({ generated: "uuid" })
+    @Column({ generated: "uuid", unique: true })
     token: string
 
     @Field()

@@ -24,6 +24,10 @@ export type T_Error =
     | "time_period_title_already_exists"
     | "time_period_pair_already_exists"
 
+    // Session
+    | "session_not_found"
+    | "session_day_time_period_already_exists"
+
     // Class
     | "class_not_found"
     | "class_title_type_sessions_already_exists"

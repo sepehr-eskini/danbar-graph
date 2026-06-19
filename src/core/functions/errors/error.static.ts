@@ -27,6 +27,10 @@ export const ErrorMessages: T_ErrorMessages = {
         time_period_title_already_exists: "عنوان بازه زمانی وارد شده از قبل در سیستم وجود دارد",
         time_period_pair_already_exists: "بازه زمانی با زمان شروع و پایان وارد شده از قبل در سیستم وجود دارد",
 
+        // Session
+        session_not_found: "سانس در سیستم وجود ندارد",
+        session_day_time_period_already_exists: "سانسی با روز و بازه زمانی وارد شده از قبل در سیستم وجود دارد",
+
         // Class
         class_not_found: "کلاس در سیستم وجود ندارد",
         class_title_type_sessions_already_exists:
