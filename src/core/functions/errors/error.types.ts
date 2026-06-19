@@ -24,14 +24,9 @@ export type T_Error =
     | "time_period_title_already_exists"
     | "time_period_pair_already_exists"
 
-    // Session
-    | "session_not_found"
-    | "session_day_time_period_already_exists"
-    | "one_or_more_sessions_not_found"
-
     // Class
     | "class_not_found"
-    | "class_title_type_already_exists"
+    | "class_title_type_sessions_already_exists"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string
