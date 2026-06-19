@@ -27,10 +27,11 @@ export type T_Error =
     // Session
     | "session_not_found"
     | "session_day_time_period_already_exists"
+    | "invalid_session_tokens"
 
     // Class
     | "class_not_found"
-    | "class_title_type_sessions_already_exists"
+    | "class_title_type_already_exists"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string

@@ -8,7 +8,7 @@ export class TimePeriod extends BaseEntity {
     id: number
 
     @Field()
-    @Column({ generated: "uuid", unique: true })
+    @Column({ type: "uuid", generated: "uuid", unique: true })
     token: string
 
     @Field()

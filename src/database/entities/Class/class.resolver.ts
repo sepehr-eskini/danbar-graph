@@ -1,8 +1,10 @@
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
+import { In } from "typeorm"
 
 import { Admin } from "../Admin"
+import { Session } from "../Session/session.entity"
 import { Class } from "./class.entity"
 import { CreateClassRq, EditClassRq, FetchClassListRq, ToggleClassStatus } from "./class.rq"
 
@@ -10,13 +12,12 @@ import { CreateClassRq, EditClassRq, FetchClassListRq, ToggleClassStatus } from 
 export class ClassResolver {
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchClassList(@Arg("body") { title, type, price, sessions }: FetchClassListRq): Promise<Class[]> {
+    async fetchClassList(@Arg("body") { title, type, price }: FetchClassListRq): Promise<Class[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: title.trim() }),
                 ...(type && { type }),
                 ...(price !== undefined && { price }),
-                ...(sessions !== undefined && { sessions }),
             },
             order: { created_at: "DESC" },
         })
@@ -26,13 +27,12 @@ export class ClassResolver {
 
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchActiveClassList(@Arg("body") { title, type, price, sessions }: FetchClassListRq): Promise<Class[]> {
+    async fetchActiveClassList(@Arg("body") { title, type, price }: FetchClassListRq): Promise<Class[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: title.trim() }),
                 ...(type && { type }),
                 ...(price !== undefined && { price }),
-                ...(sessions !== undefined && { sessions }),
                 is_active: true,
             },
             order: { created_at: "DESC" },
@@ -57,10 +57,13 @@ export class ClassResolver {
     @UseMiddleware([AuthMiddleware])
     async createClass(
         @Ctx("admin") admin: Admin,
-        @Arg("body") { title, sessions, type, price }: CreateClassRq,
+        @Arg("body") { title, session_tokens, type, price }: CreateClassRq,
     ): Promise<boolean> {
-        const existingClassWithCombination = await Class.findOne({ where: { title, type, sessions } })
-        if (existingClassWithCombination) throw generateHttpError("class_title_type_sessions_already_exists")
+        const existingClassWithCombination = await Class.findOne({ where: { title, type } })
+        if (existingClassWithCombination) throw generateHttpError("class_title_type_already_exists")
+
+        const sessions = await Session.find({ where: { token: In(session_tokens) } })
+        if (sessions.length !== session_tokens.length) throw generateHttpError("invalid_session_tokens")
 
         const classEntity = await Class.create({
             title,
@@ -75,34 +78,33 @@ export class ClassResolver {
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
-    async editClass(@Arg("body") { token, title, sessions, type, price }: EditClassRq): Promise<boolean> {
-        const classEntity = await Class.findOne({ where: { token } })
+    async editClass(@Arg("body") { token, title, session_tokens, type, price }: EditClassRq): Promise<boolean> {
+        const classEntity = await Class.findOne({ where: { token }, relations: ["sessions"] })
         if (!classEntity) throw generateHttpError("class_not_found")
 
         const newType = type || classEntity.type
-        const newSessions = sessions !== undefined ? sessions : classEntity.sessions
 
-        if (
-            (title && title.trim() !== classEntity.title) ||
-            (type && type !== classEntity.type) ||
-            (sessions !== undefined && sessions !== classEntity.sessions)
-        ) {
+        if ((title && title.trim() !== classEntity.title) || (type && type !== classEntity.type)) {
             const existingWithCombination = await Class.findOne({
                 where: {
                     title: title ? title.trim() : classEntity.title,
                     type: newType,
-                    sessions: newSessions,
                 },
             })
 
             if (existingWithCombination && existingWithCombination.token !== token)
-                throw generateHttpError("class_title_type_sessions_already_exists")
+                throw generateHttpError("class_title_type_already_exists")
         }
 
         if (title) classEntity.title = title
-        if (sessions !== undefined) classEntity.sessions = sessions
         if (type) classEntity.type = type
         if (price !== undefined) classEntity.price = price
+
+        if (session_tokens && session_tokens.length > 0) {
+            const sessions = await Session.find({ where: { token: In(session_tokens) } })
+            if (sessions.length !== session_tokens.length) throw generateHttpError("invalid_session_tokens")
+            classEntity.sessions = sessions
+        }
 
         await classEntity.save()
 

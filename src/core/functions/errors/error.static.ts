@@ -30,10 +30,10 @@ export const ErrorMessages: T_ErrorMessages = {
         // Session
         session_not_found: "سانس در سیستم وجود ندارد",
         session_day_time_period_already_exists: "سانسی با روز و بازه زمانی وارد شده از قبل در سیستم وجود دارد",
+        invalid_session_tokens: "توکن‌های وارد شده برای سانس نامعتبر هستند",
 
         // Class
         class_not_found: "کلاس در سیستم وجود ندارد",
-        class_title_type_sessions_already_exists:
-            "کلاسی با عنوان، نوع و تعداد جلسات وارد شده از قبل در سیستم وجود دارد",
+        class_title_type_already_exists: "کلاسی با عنوان و نوع وارد شده از قبل در سیستم وجود دارد",
     },
 }
