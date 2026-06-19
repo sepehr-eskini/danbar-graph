@@ -39,6 +39,6 @@ export const ErrorMessages: T_ErrorMessages = {
 
         // Price
         price_not_found: "قیمت در سیستم وجود ندارد",
-        price_sessions_count_price_already_exists: "قیمتی با تعداد سانس و قیمت وارد شده از قبل در سیستم وجود دارد",
+        price_sessions_count_price_already_exists: "کلاسی با تعداد سانس و قیمت وارد شده از قبل در سیستم وجود دارد",
     },
 }

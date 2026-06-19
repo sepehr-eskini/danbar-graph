@@ -15,7 +15,7 @@ import { Class } from "../Class/class.entity"
 
 @Entity("tbl_price")
 @ObjectType()
-@Unique(["sessions_count", "price"])
+@Unique(["sessions_count", "price", "class_token"])
 export class Price extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
