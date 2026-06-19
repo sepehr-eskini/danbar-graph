@@ -45,8 +45,7 @@ export class RegisterResolver {
             payment_date,
             payment_price,
             calendar_image_url,
-            submission_date,
-            submission_session_token,
+            submissions,
         }: CreateRegisterRq,
     ): Promise<boolean> {
         const user = await User.findOne({ where: { token: user_token } })
@@ -68,18 +67,19 @@ export class RegisterResolver {
             admin_token: admin.token,
         }).save()
 
-        // Bulk create sessions_count number of schedules
-        const schedules = Array.from({ length: price.sessions_count }, () =>
-            Schedule.create({
+        // Create schedules and save them with Promise.all
+        const schedulePromises = Array.from({ length: price.sessions_count }, (_, index) => {
+            const schedule = Schedule.create({
                 register_token: register.token,
-                submission_date,
-                submission_session_token,
+                submission_date: submissions[index]?.date,
+                submission_session_token: submissions[index]?.session_token,
                 submission_instructor_token: classEntity.instructor_token,
                 status: E_ScheduleStatus.UNSET,
-            }),
-        )
+            })
+            return schedule.save()
+        })
 
-        await Schedule.save(schedules)
+        await Promise.all(schedulePromises)
 
         return true
     }

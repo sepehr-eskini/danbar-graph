@@ -26,7 +26,6 @@ export class Register extends BaseEntity {
     @Column({ type: "uuid", generated: "uuid", unique: true })
     token: string
 
-    @Field()
     @Column({ type: "uuid" })
     user_token: string
 
@@ -35,7 +34,6 @@ export class Register extends BaseEntity {
     @JoinColumn({ name: "user_token", referencedColumnName: "token" })
     user: User
 
-    @Field()
     @Column({ type: "uuid" })
     class_token: string
 
@@ -44,7 +42,6 @@ export class Register extends BaseEntity {
     @JoinColumn({ name: "class_token", referencedColumnName: "token" })
     class: Class
 
-    @Field()
     @Column({ type: "uuid" })
     price_token: string
 

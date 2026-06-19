@@ -4,6 +4,7 @@ import { Arg, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
 
 import { Schedule } from "./schedule.entity"
 import { FetchScheduleListRq, SetScheduleRq } from "./schedule.rq"
+import { E_ScheduleStatus } from "./schedule.types"
 
 @Resolver()
 export class ScheduleResolver {
@@ -54,7 +55,7 @@ export class ScheduleResolver {
             schedule.presence_date = presence_date
             schedule.presence_session_token = presence_session_token
             schedule.presence_instructor_token = presence_instructor_token
-        } else {
+        } else if (status === E_ScheduleStatus.PRESENT) {
             schedule.presence_date = schedule.submission_date
             schedule.presence_session_token = schedule.submission_session_token
             schedule.presence_instructor_token = schedule.submission_instructor_token

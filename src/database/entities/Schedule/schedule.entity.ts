@@ -25,7 +25,6 @@ export class Schedule extends BaseEntity {
     @Column({ type: "uuid", generated: "uuid", unique: true })
     token: string
 
-    @Field()
     @Column({ type: "uuid" })
     register_token: string
 
@@ -38,7 +37,6 @@ export class Schedule extends BaseEntity {
     @Column({ type: "date" })
     submission_date: string
 
-    @Field()
     @Column({ type: "uuid" })
     submission_session_token: string
 
@@ -47,7 +45,6 @@ export class Schedule extends BaseEntity {
     @JoinColumn({ name: "submission_session_token", referencedColumnName: "token" })
     submission_session: Session
 
-    @Field()
     @Column({ type: "uuid" })
     submission_instructor_token: string
 
@@ -60,7 +57,6 @@ export class Schedule extends BaseEntity {
     @Column({ type: "date", nullable: true })
     presence_date: string
 
-    @Field({ nullable: true })
     @Column({ type: "uuid", nullable: true })
     presence_session_token: string
 
@@ -69,7 +65,6 @@ export class Schedule extends BaseEntity {
     @JoinColumn({ name: "presence_session_token", referencedColumnName: "token" })
     presence_session: Session
 
-    @Field({ nullable: true })
     @Column({ type: "uuid", nullable: true })
     presence_instructor_token: string
 

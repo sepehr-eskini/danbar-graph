@@ -1,4 +1,14 @@
+// register.rq.ts
 import { Field, InputType } from "type-graphql"
+
+@InputType()
+export class SubmissionInput {
+    @Field()
+    date: string
+
+    @Field()
+    session_token: string
+}
 
 @InputType()
 export class CreateRegisterRq {
@@ -20,11 +30,8 @@ export class CreateRegisterRq {
     @Field()
     calendar_image_url: string
 
-    @Field()
-    submission_date: string
-
-    @Field()
-    submission_session_token: string
+    @Field(() => [SubmissionInput]) // Explicitly specify the type
+    submissions: SubmissionInput[]
 }
 
 @InputType()
