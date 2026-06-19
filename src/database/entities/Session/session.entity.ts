@@ -7,6 +7,7 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from "typeorm"
 
@@ -15,6 +16,7 @@ import { E_Day } from "./session.types"
 
 @Entity("tbl_session")
 @ObjectType()
+@Unique(["day", "time_period"])
 export class Session extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
