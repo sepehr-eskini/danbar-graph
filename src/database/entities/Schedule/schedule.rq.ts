@@ -42,6 +42,12 @@ export class SetScheduleRq {
 
     @Field(() => E_ScheduleStatus)
     status: E_ScheduleStatus
+}
+
+@InputType()
+export class EditScheduleRq {
+    @Field()
+    token: string
 
     @Field({ nullable: true })
     presence_date?: string
