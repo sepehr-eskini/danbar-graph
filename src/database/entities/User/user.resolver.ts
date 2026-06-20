@@ -10,11 +10,12 @@ import { CreateUserRq, EditUserRq, FetchActiveUsersListRq, FetchUsersListRq, Tog
 export class UserResolver {
     @Query(() => [User])
     @UseMiddleware([AuthMiddleware])
-    async fetchUsersList(@Arg("body") { full_name, phone_number }: FetchUsersListRq): Promise<User[]> {
+    async fetchUsersList(@Arg("body") { full_name, phone_number, is_active }: FetchUsersListRq): Promise<User[]> {
         const users = await User.find({
             where: {
                 ...(full_name && { full_name: full_name.trim() }),
                 ...(phone_number && { phone_number }),
+                ...(is_active && { is_active }),
             },
             order: { created_at: "DESC" },
         })

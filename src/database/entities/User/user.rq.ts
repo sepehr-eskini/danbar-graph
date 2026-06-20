@@ -22,6 +22,9 @@ export class FetchUsersListRq {
 
     @Field({ nullable: true })
     phone_number?: string
+
+    @Field({ nullable: true })
+    is_active?: boolean
 }
 
 @InputType()
