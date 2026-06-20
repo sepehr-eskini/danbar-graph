@@ -17,9 +17,9 @@ export const ErrorMessages: T_ErrorMessages = {
         admin_already_exists: "ادمین با مشخصات وارد شده از قبل در سیستم وجود دارد",
 
         // Personnel
-        personnel_not_found: "پرسنل در سیستم وجود ندارد",
-        personnel_phone_number_already_exists: "شماره تماس پرسنل وارد شده از قبل در سیستم وجود دارد",
-        personnel_full_name_already_exists: "نام پرسنل وارد شده از قبل در سیستم وجود دارد",
+        personnel_not_found: "مربی در سیستم وجود ندارد",
+        personnel_phone_number_already_exists: "شماره تماس مربی وارد شده از قبل در سیستم وجود دارد",
+        personnel_full_name_already_exists: "نام مربی وارد شده از قبل در سیستم وجود دارد",
         instructor_not_found: "مربی در سیستم وجود ندارد",
 
         // TimePeriod
