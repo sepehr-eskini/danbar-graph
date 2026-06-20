@@ -4,11 +4,15 @@ import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql
 import { In } from "typeorm"
 
 import { Admin } from "../Admin"
-import { Personnel } from "../Personnel/personnel.entity"
-import { Price } from "../Price/price.entity"
-import { Session } from "../Session/session.entity"
+import { Personnel } from "../Personnel"
+import { Price } from "../Price"
+import { Register } from "../Register"
+import { E_ScheduleStatus, Schedule } from "../Schedule"
+import { Session } from "../Session"
 import { Class } from "./class.entity"
 import { CreateClassRq, EditClassRq, FetchClassListRq, FetchClassPricesRq, ToggleClassStatus } from "./class.rq"
+import type { ClassSessionPopulation } from "./class.rs"
+import { ClassSessionPopulations } from "./class.rs"
 
 @Resolver()
 export class ClassResolver {
@@ -60,6 +64,69 @@ export class ClassResolver {
         })
 
         return prices
+    }
+
+    @Query(() => [ClassSessionPopulations])
+    @UseMiddleware([AuthMiddleware])
+    async fetchClassSessionPopulations(): Promise<ClassSessionPopulations[]> {
+        const classes = await Class.find({
+            where: { is_active: true },
+            relations: ["sessions", "instructor"],
+        })
+
+        const result: ClassSessionPopulations[] = await Promise.all(
+            classes.map(async classEntity => {
+                const sessionPopulations: ClassSessionPopulation[] = await Promise.all(
+                    classEntity.sessions.map(async session => {
+                        // Find all registers for this class
+                        const registers = await Register.find({
+                            where: { class_token: classEntity.token },
+                            select: ["token"],
+                        })
+                        const registerTokens = registers.map(r => r.token)
+
+                        if (registerTokens.length === 0) {
+                            return {
+                                session_token: session.token,
+                                session,
+                                population_count: 0,
+                            }
+                        }
+
+                        // Find all schedules with UNSET status for this session and these registers
+                        const unsetSchedules = await Schedule.find({
+                            where: {
+                                register_token: In(registerTokens),
+                                submission_session_token: session.token,
+                                status: E_ScheduleStatus.UNSET,
+                            },
+                            select: ["register_token"],
+                        })
+
+                        // Count unique registrants (each register counted once regardless of how many UNSET schedules they have)
+                        const uniqueRegisterTokens = [...new Set(unsetSchedules.map(s => s.register_token))]
+                        const population_count = uniqueRegisterTokens.length
+
+                        return {
+                            session_token: session.token,
+                            session,
+                            population_count,
+                        }
+                    }),
+                )
+
+                const total_population = sessionPopulations.reduce((sum, sp) => sum + sp.population_count, 0)
+
+                return {
+                    class_token: classEntity.token,
+                    class: classEntity,
+                    sessions: sessionPopulations,
+                    total_population,
+                }
+            }),
+        )
+
+        return result
     }
 
     @Mutation(() => Boolean)

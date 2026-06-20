@@ -1,4 +1,5 @@
 export * from "./class.entity"
 export * from "./class.resolver"
 export * from "./class.rq"
+export * from "./class.rs"
 export * from "./class.types"
