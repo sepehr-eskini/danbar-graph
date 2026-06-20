@@ -31,9 +31,6 @@ export class FetchUsersListRq {
 export class FetchActiveUsersListRq {
     @Field({ nullable: true })
     full_name?: string
-
-    @Field({ nullable: true })
-    phone_number?: string
 }
 
 @InputType()

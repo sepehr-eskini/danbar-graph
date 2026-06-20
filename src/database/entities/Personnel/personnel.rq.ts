@@ -36,15 +36,15 @@ export class FetchPersonnelListRq {
 
     @Field(() => [E_PersonnelRole], { nullable: true })
     role?: E_PersonnelRole
+
+    @Field({ nullable: true })
+    is_active?: boolean
 }
 
 @InputType()
 export class FetchActivePersonnelListRq {
     @Field({ nullable: true })
     full_name?: string
-
-    @Field({ nullable: true })
-    phone_number?: string
 
     @Field(() => [E_PersonnelRole], { nullable: true })
     role?: E_PersonnelRole

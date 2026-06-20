@@ -26,11 +26,10 @@ export class UserResolver {
 
     @Query(() => [User])
     @UseMiddleware([AuthMiddleware])
-    async fetchActiveUsersList(@Arg("body") { full_name, phone_number }: FetchActiveUsersListRq): Promise<User[]> {
+    async fetchActiveUsersList(@Arg("body") { full_name }: FetchActiveUsersListRq): Promise<User[]> {
         const users = await User.find({
             where: {
-                ...(full_name && { full_name: full_name.trim() }),
-                ...(phone_number && { phone_number }),
+                ...(full_name && { full_name: Like(`%${full_name.trim()}%`) }),
                 is_active: true,
             },
             order: { created_at: "DESC" },

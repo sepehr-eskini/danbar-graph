@@ -1,6 +1,7 @@
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
+import { Like } from "typeorm"
 
 import { Admin } from "../Admin"
 import { Personnel } from "./personnel.entity"
@@ -17,13 +18,14 @@ export class PersonnelResolver {
     @Query(() => [Personnel])
     @UseMiddleware([AuthMiddleware])
     async fetchPersonnelList(
-        @Arg("body") { full_name, phone_number, role }: FetchPersonnelListRq,
+        @Arg("body") { full_name, phone_number, role, is_active }: FetchPersonnelListRq,
     ): Promise<Personnel[]> {
         const personnel = await Personnel.find({
             where: {
-                ...(full_name && { full_name: full_name.trim() }),
-                ...(phone_number && { phone_number }),
+                ...(full_name && { full_name: Like(`%${full_name.trim()}%`) }),
+                ...(phone_number && { phone_number: Like(`%${phone_number}%`) }),
                 ...(role && { role }),
+                ...(is_active !== undefined && is_active !== null && { is_active }),
             },
             order: { created_at: "DESC" },
         })
@@ -33,13 +35,10 @@ export class PersonnelResolver {
 
     @Query(() => [Personnel])
     @UseMiddleware([AuthMiddleware])
-    async fetchActivePersonnelList(
-        @Arg("body") { full_name, phone_number, role }: FetchActivePersonnelListRq,
-    ): Promise<Personnel[]> {
+    async fetchActivePersonnelList(@Arg("body") { full_name, role }: FetchActivePersonnelListRq): Promise<Personnel[]> {
         const personnel = await Personnel.find({
             where: {
-                ...(full_name && { full_name: full_name.trim() }),
-                ...(phone_number && { phone_number }),
+                ...(full_name && { full_name: Like(`%${full_name.trim()}%`) }),
                 ...(role && { role }),
                 is_active: true,
             },
@@ -113,13 +112,5 @@ export class PersonnelResolver {
         await personnel.save()
 
         return true
-    }
-
-    @Query(() => Personnel, { nullable: true })
-    @UseMiddleware([AuthMiddleware])
-    async getPersonnelByToken(@Arg("token") token: string): Promise<Personnel | null> {
-        const personnel = await Personnel.findOne({ where: { token } })
-        if (!personnel) throw generateHttpError("personnel_not_found")
-        return personnel
     }
 }
