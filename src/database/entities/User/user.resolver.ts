@@ -75,11 +75,15 @@ export class UserResolver {
         const user = await User.findOne({ where: { token } })
         if (!user) throw generateHttpError("user_not_found")
 
-        const existingUserWithPhoneNumber = await User.findOne({ where: { phone_number } })
-        if (existingUserWithPhoneNumber) throw generateHttpError("user_phone_number_already_exists")
+        if (phone_number && phone_number !== user.phone_number) {
+            const existingUserWithPhoneNumber = await User.findOne({ where: { phone_number } })
+            if (existingUserWithPhoneNumber) throw generateHttpError("user_phone_number_already_exists")
+        }
 
-        const existingUserWithFullName = await User.findOne({ where: { full_name } })
-        if (existingUserWithFullName) throw generateHttpError("user_full_name_already_exists")
+        if (full_name && full_name !== user.full_name) {
+            const existingUserWithFullName = await User.findOne({ where: { full_name } })
+            if (existingUserWithFullName) throw generateHttpError("user_full_name_already_exists")
+        }
 
         if (full_name) user.full_name = full_name
         if (phone_number) user.phone_number = phone_number
