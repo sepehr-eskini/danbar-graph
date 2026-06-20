@@ -30,7 +30,7 @@ export class Personnel extends BaseEntity {
     fixed_income_price: number
 
     @Field()
-    @Column({ type: "enum", enum: E_PersonnelRole })
+    @Column({ type: "enum", enum: E_PersonnelRole, default: E_PersonnelRole.INSTRUCTOR })
     role: E_PersonnelRole
 
     @Field()

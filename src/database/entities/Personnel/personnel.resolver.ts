@@ -18,13 +18,12 @@ export class PersonnelResolver {
     @Query(() => [Personnel])
     @UseMiddleware([AuthMiddleware])
     async fetchPersonnelList(
-        @Arg("body") { full_name, phone_number, role, is_active }: FetchPersonnelListRq,
+        @Arg("body") { full_name, phone_number, is_active }: FetchPersonnelListRq,
     ): Promise<Personnel[]> {
         const personnel = await Personnel.find({
             where: {
                 ...(full_name && { full_name: Like(`%${full_name.trim()}%`) }),
                 ...(phone_number && { phone_number: Like(`%${phone_number}%`) }),
-                ...(role && { role }),
                 ...(is_active !== undefined && is_active !== null && { is_active }),
             },
             order: { created_at: "DESC" },
@@ -35,11 +34,10 @@ export class PersonnelResolver {
 
     @Query(() => [Personnel])
     @UseMiddleware([AuthMiddleware])
-    async fetchActivePersonnelList(@Arg("body") { full_name, role }: FetchActivePersonnelListRq): Promise<Personnel[]> {
+    async fetchActivePersonnelList(@Arg("body") { full_name }: FetchActivePersonnelListRq): Promise<Personnel[]> {
         const personnel = await Personnel.find({
             where: {
                 ...(full_name && { full_name: Like(`%${full_name.trim()}%`) }),
-                ...(role && { role }),
                 is_active: true,
             },
             order: { created_at: "DESC" },
@@ -65,7 +63,7 @@ export class PersonnelResolver {
     async createPersonnel(
         @Ctx("admin") admin: Admin,
         @Arg("body")
-        { full_name, phone_number, role, income_percentage = 0, fixed_income_price = 0 }: CreatePersonnelRq,
+        { full_name, phone_number, income_percentage = 0, fixed_income_price = 0 }: CreatePersonnelRq,
     ): Promise<boolean> {
         const existingPersonnelWithPhoneNumber = await Personnel.findOne({ where: { phone_number } })
         if (existingPersonnelWithPhoneNumber) throw generateHttpError("personnel_phone_number_already_exists")
@@ -76,7 +74,6 @@ export class PersonnelResolver {
         const personnel = await Personnel.create({
             full_name,
             phone_number,
-            role,
             income_percentage,
             fixed_income_price,
             admin_token: admin.token,
@@ -88,7 +85,7 @@ export class PersonnelResolver {
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
     async editPersonnel(
-        @Arg("body") { token, full_name, phone_number, role, income_percentage, fixed_income_price }: EditPersonnelRq,
+        @Arg("body") { token, full_name, phone_number, income_percentage, fixed_income_price }: EditPersonnelRq,
     ): Promise<boolean> {
         const personnel = await Personnel.findOne({ where: { token } })
         if (!personnel) throw generateHttpError("personnel_not_found")
@@ -105,7 +102,6 @@ export class PersonnelResolver {
 
         if (full_name) personnel.full_name = full_name
         if (phone_number) personnel.phone_number = phone_number
-        if (role) personnel.role = role
         if (income_percentage !== undefined) personnel.income_percentage = income_percentage
         if (fixed_income_price !== undefined) personnel.fixed_income_price = fixed_income_price
 

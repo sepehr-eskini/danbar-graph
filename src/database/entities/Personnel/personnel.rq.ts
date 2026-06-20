@@ -1,7 +1,5 @@
 import { Field, InputType } from "type-graphql"
 
-import { E_PersonnelRole } from "./personnel.types"
-
 @InputType()
 export class CreatePersonnelRq {
     @Field()
@@ -9,9 +7,6 @@ export class CreatePersonnelRq {
 
     @Field()
     phone_number: string
-
-    @Field(() => [E_PersonnelRole])
-    role: E_PersonnelRole
 
     @Field({ nullable: true, defaultValue: 0 })
     income_percentage?: number
@@ -34,9 +29,6 @@ export class FetchPersonnelListRq {
     @Field({ nullable: true })
     phone_number?: string
 
-    @Field(() => [E_PersonnelRole], { nullable: true })
-    role?: E_PersonnelRole
-
     @Field({ nullable: true })
     is_active?: boolean
 }
@@ -45,9 +37,6 @@ export class FetchPersonnelListRq {
 export class FetchActivePersonnelListRq {
     @Field({ nullable: true })
     full_name?: string
-
-    @Field(() => [E_PersonnelRole], { nullable: true })
-    role?: E_PersonnelRole
 }
 
 @InputType()
@@ -60,9 +49,6 @@ export class EditPersonnelRq {
 
     @Field({ nullable: true })
     phone_number?: string
-
-    @Field(() => [E_PersonnelRole], { nullable: true })
-    role?: E_PersonnelRole
 
     @Field({ nullable: true })
     income_percentage?: number
