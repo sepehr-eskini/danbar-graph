@@ -1,6 +1,7 @@
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
+import { Like } from "typeorm"
 
 import { Admin } from "../Admin"
 import { User } from "./user.entity"
@@ -13,9 +14,9 @@ export class UserResolver {
     async fetchUsersList(@Arg("body") { full_name, phone_number, is_active }: FetchUsersListRq): Promise<User[]> {
         const users = await User.find({
             where: {
-                ...(full_name && { full_name: full_name.trim() }),
-                ...(phone_number && { phone_number }),
-                ...(is_active && { is_active }),
+                ...(full_name && { full_name: Like(`%${full_name.trim()}%`) }),
+                ...(phone_number && { phone_number: Like(`%${phone_number}%`) }),
+                ...(is_active !== undefined && is_active !== null && { is_active }),
             },
             order: { created_at: "DESC" },
         })
