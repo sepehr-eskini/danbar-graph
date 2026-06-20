@@ -100,35 +100,110 @@ export class RegisterResolver {
 
     @Query(() => [UserWithUnsetScheduleInfo])
     @UseMiddleware([AuthMiddleware])
-    async getUsersWithUnsetScheduleInfo(): Promise<UserWithUnsetScheduleInfo[]> {
+    async fetchUsersWithCompletedSchedules(): Promise<UserWithUnsetScheduleInfo[]> {
+        // Get all active users
         const users = await User.find({
-            relations: ["registers", "registers.schedules", "registers.class"],
+            where: { is_active: true },
         })
 
-        return users
-            .map(user => {
-                const unsetSchedules =
-                    user.registers?.flatMap(r => r.schedules || []).filter(s => s.status === E_ScheduleStatus.UNSET) ||
-                    []
+        // For each user, check if they have schedules but no unset ones
+        const result: UserWithUnsetScheduleInfo[] = await Promise.all(
+            users.map(async user => {
+                // Find all registers for this user with their related schedules and class
+                const registers = await Register.find({
+                    where: { user_token: user.token },
+                    relations: ["class", "schedules"],
+                })
 
-                const latestUnset =
-                    unsetSchedules.length > 0
-                        ? unsetSchedules.reduce((a, b) =>
-                              new Date(a.submission_date) > new Date(b.submission_date) ? a : b,
-                          )
-                        : null
+                // Get all schedules (not just unset)
+                const allSchedules = registers.flatMap(register =>
+                    (register.schedules || []).map(schedule => ({ ...schedule, register })),
+                )
 
-                const register = latestUnset
-                    ? user.registers?.find(r => r.schedules?.some(s => s.token === latestUnset.token))
-                    : null
+                // Get unset schedules
+                const unsetSchedules = allSchedules.filter(schedule => schedule.status === E_ScheduleStatus.UNSET)
+
+                // Only include users who have schedules but no unset ones (completed all)
+                if (allSchedules.length === 0 || unsetSchedules.length > 0) {
+                    return null
+                }
+
+                // Find the most recent schedule by submission_date (last class they attended)
+                const lastSchedule = allSchedules.reduce((latest, current) => {
+                    const latestDate = new Date(latest.submission_date).getTime()
+                    const currentDate = new Date(current.submission_date).getTime()
+                    return currentDate > latestDate ? current : latest
+                })
+
+                return {
+                    user,
+                    unset_count: 0,
+                    last_unset_class: lastSchedule.register.class,
+                    last_unset_submission_date: lastSchedule.submission_date,
+                }
+            }),
+        )
+
+        // Filter out null values and sort by last submission date (most recent first)
+        return result
+            .filter((item): item is UserWithUnsetScheduleInfo => item !== null)
+            .sort((a, b) => {
+                const dateA = new Date(a.last_unset_submission_date || "").getTime()
+                const dateB = new Date(b.last_unset_submission_date || "").getTime()
+                return dateB - dateA
+            })
+    }
+
+    @Query(() => [UserWithUnsetScheduleInfo])
+    @UseMiddleware([AuthMiddleware])
+    async fetchUsersWithUnsetScheduleInfo(): Promise<UserWithUnsetScheduleInfo[]> {
+        // Get all active users
+        const users = await User.find({
+            where: { is_active: true },
+        })
+
+        // For each user, get their unset schedules efficiently
+        const result: UserWithUnsetScheduleInfo[] = await Promise.all(
+            users.map(async user => {
+                // Find all registers for this user with their related schedules and class
+                const registers = await Register.find({
+                    where: { user_token: user.token },
+                    relations: ["class", "schedules"],
+                })
+
+                // Flatten all unset schedules from all registers
+                const unsetSchedules = registers.flatMap(register =>
+                    (register.schedules || [])
+                        .filter(schedule => schedule.status === E_ScheduleStatus.UNSET)
+                        .map(schedule => ({ ...schedule, register })),
+                )
+
+                if (unsetSchedules.length === 0) {
+                    return {
+                        user,
+                        unset_count: 0,
+                        last_unset_class: null,
+                        last_unset_submission_date: null,
+                    }
+                }
+
+                // Find the most recent unset schedule by submission_date
+                const latestUnset = unsetSchedules.reduce((latest, current) => {
+                    const latestDate = new Date(latest.submission_date).getTime()
+                    const currentDate = new Date(current.submission_date).getTime()
+                    return currentDate > latestDate ? current : latest
+                })
 
                 return {
                     user,
                     unset_count: unsetSchedules.length,
-                    last_unset_class: register?.class || null,
-                    last_unset_submission_date: latestUnset?.submission_date || null,
+                    last_unset_class: latestUnset.register.class,
+                    last_unset_submission_date: latestUnset.submission_date,
                 }
-            })
-            .sort((a, b) => a.unset_count - b.unset_count)
+            }),
+        )
+
+        // Filter out users with no unset schedules and sort by unset_count (descending - most unset first)
+        return result.filter(item => item.unset_count > 0).sort((a, b) => b.unset_count - a.unset_count)
     }
 }
