@@ -10,8 +10,6 @@ import { CreateSessionRq, FetchActiveSessionListRq, FetchSessionListRq, ToggleSe
 export class SessionResolver {
     @Query(() => [Session])
     @UseMiddleware([AuthMiddleware])
-    @Query(() => [Session])
-    @UseMiddleware([AuthMiddleware])
     async fetchSessionList(@Arg("body") { day, time_period_token, is_active }: FetchSessionListRq): Promise<Session[]> {
         let query = Session.createQueryBuilder("session").leftJoinAndSelect("session.time_period", "time_period")
 

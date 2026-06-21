@@ -136,7 +136,7 @@ export class ClassResolver {
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
     async toggleClassStatus(@Arg("body") { token }: ToggleClassStatus): Promise<boolean> {
-        const classEntity = await Class.findOne({ where: { token } })
+        const classEntity = await Class.findOne({ where: { token }, relations: [] })
         if (!classEntity) throw generateHttpError("class_not_found")
 
         classEntity.is_active = !classEntity.is_active
