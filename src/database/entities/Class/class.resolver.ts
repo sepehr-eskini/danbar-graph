@@ -29,7 +29,10 @@ export class ClassResolver {
                 ...(is_active !== undefined && is_active !== null && { is_active }),
             },
             relations: ["sessions", "instructor", "prices"],
-            order: { created_at: "DESC" },
+            order: {
+                is_active: "DESC",
+                created_at: "DESC",
+            },
         })
 
         return classes
