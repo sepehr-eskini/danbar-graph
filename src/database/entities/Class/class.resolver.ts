@@ -14,6 +14,27 @@ import { CreateClassRq, EditClassRq, FetchClassListRq, FetchClassPricesRq, Toggl
 import type { ClassSessionPopulation } from "./class.rs"
 import { ClassSessionPopulations } from "./class.rs"
 
+const dayOrder: { [key: string]: number } = {
+    SAT: 0,
+    SUN: 1,
+    MON: 2,
+    TUE: 3,
+    WED: 4,
+    THU: 5,
+    FRI: 6,
+}
+
+const sortSessionsByDayAndTime = (sessions: Session[]): Session[] => {
+    return sessions.sort((a, b) => {
+        const dayDiff = dayOrder[a.day] - dayOrder[b.day]
+        if (dayDiff !== 0) return dayDiff
+
+        const aTime = a.time_period.from_time
+        const bTime = b.time_period.from_time
+        return aTime.localeCompare(bTime)
+    })
+}
+
 @Resolver()
 export class ClassResolver {
     @Query(() => [Class])
@@ -35,6 +56,11 @@ export class ClassResolver {
             },
         })
 
+        // Sort sessions for each class by day and time
+        classes.forEach(classEntity => {
+            classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
+        })
+
         return classes
     }
 
@@ -48,6 +74,11 @@ export class ClassResolver {
             },
             relations: ["sessions", "instructor", "prices"],
             order: { created_at: "DESC" },
+        })
+
+        // Sort sessions for each class by day and time
+        classes.forEach(classEntity => {
+            classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
         })
 
         return classes
