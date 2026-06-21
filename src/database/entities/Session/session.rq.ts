@@ -9,24 +9,6 @@ export class CreateSessionRq {
 
     @Field()
     time_period_token: string
-
-    @Field({ nullable: true })
-    is_active?: boolean
-}
-
-@InputType()
-export class EditSessionRq {
-    @Field()
-    token: string
-
-    @Field(() => E_Day, { nullable: true })
-    day?: E_Day
-
-    @Field({ nullable: true })
-    time_period_token?: string
-
-    @Field({ nullable: true })
-    is_active?: boolean
 }
 
 @InputType()
@@ -45,4 +27,13 @@ export class FetchSessionListRq {
 
     @Field({ nullable: true })
     is_active?: boolean
+}
+
+@InputType()
+export class FetchActiveSessionListRq {
+    @Field(() => E_Day, { nullable: true })
+    day?: E_Day
+
+    @Field({ nullable: true })
+    time_period_token?: string
 }
