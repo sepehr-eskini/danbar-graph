@@ -42,12 +42,6 @@ export class FetchClassListRq {
 export class FetchActiveClassListRq {
     @Field({ nullable: true })
     title?: string
-
-    @Field(() => E_ClassType, { nullable: true })
-    type?: E_ClassType
-
-    @Field({ nullable: true })
-    instructor_token?: string
 }
 
 @InputType()

@@ -1,7 +1,7 @@
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
-import { In } from "typeorm"
+import { In, Like } from "typeorm"
 
 import { Admin } from "../Admin"
 import { Personnel } from "../Personnel"
@@ -23,7 +23,7 @@ export class ClassResolver {
     ): Promise<Class[]> {
         const classes = await Class.find({
             where: {
-                ...(title && { title: title.trim() }),
+                ...(title && { title: Like(`%${title.trim()}%`) }),
                 ...(type && { type }),
                 ...(instructor_token && { instructor_token }),
                 ...(is_active !== undefined && is_active !== null && { is_active }),
@@ -40,12 +40,10 @@ export class ClassResolver {
 
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchActiveClassList(@Arg("body") { title, type, instructor_token }: FetchClassListRq): Promise<Class[]> {
+    async fetchActiveClassList(@Arg("body") { title }: FetchClassListRq): Promise<Class[]> {
         const classes = await Class.find({
             where: {
-                ...(title && { title: title.trim() }),
-                ...(type && { type }),
-                ...(instructor_token && { instructor_token }),
+                ...(title && { title: Like(`%${title.trim()}%`) }),
                 is_active: true,
             },
             relations: ["sessions", "instructor", "prices"],
