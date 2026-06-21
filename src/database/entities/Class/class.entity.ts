@@ -35,7 +35,7 @@ export class Class extends BaseEntity {
     title: string
 
     @Field(() => [Session])
-    @ManyToMany(() => Session, { eager: true })
+    @ManyToMany(() => Session)
     @JoinTable({
         name: "tbl_class_sessions",
         joinColumn: { name: "class_token", referencedColumnName: "token" },
