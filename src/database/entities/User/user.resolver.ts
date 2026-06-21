@@ -18,7 +18,10 @@ export class UserResolver {
                 ...(phone_number && { phone_number: Like(`%${phone_number}%`) }),
                 ...(is_active !== undefined && is_active !== null && { is_active }),
             },
-            order: { created_at: "DESC" },
+            order: {
+                is_active: "DESC",
+                created_at: "DESC",
+            },
         })
 
         return users
