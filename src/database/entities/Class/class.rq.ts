@@ -33,6 +33,9 @@ export class FetchClassListRq {
 
     @Field({ nullable: true })
     instructor_token?: string
+
+    @Field({ nullable: true })
+    is_active?: boolean
 }
 
 @InputType()

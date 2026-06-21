@@ -18,12 +18,15 @@ import { ClassSessionPopulations } from "./class.rs"
 export class ClassResolver {
     @Query(() => [Class])
     @UseMiddleware([AuthMiddleware])
-    async fetchClassList(@Arg("body") { title, type, instructor_token }: FetchClassListRq): Promise<Class[]> {
+    async fetchClassList(
+        @Arg("body") { title, type, instructor_token, is_active }: FetchClassListRq,
+    ): Promise<Class[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: title.trim() }),
                 ...(type && { type }),
                 ...(instructor_token && { instructor_token }),
+                ...(is_active !== undefined && is_active !== null && { is_active }),
             },
             relations: ["sessions", "instructor", "prices"],
             order: { created_at: "DESC" },
