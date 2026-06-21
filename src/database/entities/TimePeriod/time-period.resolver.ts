@@ -11,7 +11,9 @@ export class TimePeriodResolver {
     @Query(() => [TimePeriod])
     @UseMiddleware([AuthMiddleware])
     async fetchTimePeriodList(): Promise<TimePeriod[]> {
-        const timePeriods = await TimePeriod.find({ order: { from_time: "ASC", to_time: "ASC" } })
+        const timePeriods = await TimePeriod.find({
+            order: { from_time: "ASC", to_time: "ASC" },
+        })
 
         return timePeriods
     }
