@@ -213,11 +213,11 @@ export class ClassResolver {
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
-    async editClass(
-        @Arg("body") { token, title, session_tokens, type, instructor_token }: EditClassRq,
-    ): Promise<boolean> {
-        const classEntity = await Class.findOne({ where: { token }, relations: ["sessions"] })
+    async editClass(@Arg("body") { token, title, type, instructor_token }: EditClassRq): Promise<boolean> {
+        const classEntity = await Class.findOne({ where: { token } })
         if (!classEntity) throw generateHttpError("class_not_found")
+
+        let instructor: Personnel
 
         const newType = type || classEntity.type
         const newInstructorToken = instructor_token || classEntity.instructor_token
@@ -228,7 +228,7 @@ export class ClassResolver {
             (instructor_token && instructor_token !== classEntity.instructor_token)
         ) {
             if (instructor_token) {
-                const instructor = await Personnel.findOne({ where: { token: instructor_token } })
+                instructor = await Personnel.findOne({ where: { token: instructor_token } })
                 if (!instructor) throw generateHttpError("instructor_not_found")
             }
 
@@ -247,12 +247,7 @@ export class ClassResolver {
         if (title) classEntity.title = title
         if (type) classEntity.type = type
         if (instructor_token) classEntity.instructor_token = instructor_token
-
-        if (session_tokens && session_tokens.length > 0) {
-            const sessions = await Session.find({ where: { token: In(session_tokens) } })
-            if (sessions.length !== session_tokens.length) throw generateHttpError("invalid_session_tokens")
-            classEntity.sessions = sessions
-        }
+        if (instructor_token) classEntity.instructor = instructor
 
         await classEntity.save()
 
