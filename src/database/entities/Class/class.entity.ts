@@ -32,7 +32,7 @@ export class Class extends BaseEntity {
     title: string
 
     @Field(() => [String])
-    @Column({ array: true })
+    @Column({ type: "simple-array" })
     session_tokens: string[]
 
     @Field(() => E_ClassType)
