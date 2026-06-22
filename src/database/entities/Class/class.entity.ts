@@ -5,6 +5,8 @@ import {
     CreateDateColumn,
     Entity,
     JoinColumn,
+    JoinTable,
+    ManyToMany,
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
@@ -14,6 +16,7 @@ import {
 
 import { Personnel } from "../Personnel/personnel.entity"
 import { Price } from "../Price/price.entity"
+import { Session } from "../Session/session.entity"
 import { E_ClassType } from "./class.types"
 
 @Entity("tbl_class")
@@ -31,9 +34,14 @@ export class Class extends BaseEntity {
     @Column()
     title: string
 
-    @Field(() => [String])
-    @Column({ type: "uuid", array: true, default: () => "'{}'" })
-    session_tokens: string[]
+    @Field(() => [Session])
+    @ManyToMany(() => Session)
+    @JoinTable({
+        name: "tbl_class_sessions",
+        joinColumn: { name: "class_token", referencedColumnName: "token" },
+        inverseJoinColumn: { name: "session_token", referencedColumnName: "token" },
+    })
+    sessions: Session[]
 
     @Field(() => E_ClassType)
     @Column({ type: "enum", enum: E_ClassType })
@@ -67,4 +75,4 @@ export class Class extends BaseEntity {
     updated_at: Date
 }
 
-export const ClassRelations = ["instructor", "prices"]
+export const ClassRelations = ["sessions", "instructor", "prices"]
