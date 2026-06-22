@@ -1,4 +1,3 @@
-import { Session } from "inspector"
 import { Field, ObjectType } from "type-graphql"
 import {
     BaseEntity,
@@ -35,9 +34,6 @@ export class Class extends BaseEntity {
     @Field(() => [String])
     @Column({ type: "uuid", array: true, default: () => "'{}'" })
     session_tokens: string[]
-
-    @Field(() => [Session], { nullable: true })
-    sessions: Session[]
 
     @Field(() => E_ClassType)
     @Column({ type: "enum", enum: E_ClassType })
