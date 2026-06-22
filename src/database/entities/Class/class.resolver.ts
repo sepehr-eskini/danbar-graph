@@ -1,12 +1,13 @@
+/* eslint-disable no-await-in-loop */
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
-import { Like } from "typeorm"
+import { In, Like } from "typeorm"
 
 import { Admin } from "../Admin"
 import { Personnel } from "../Personnel"
 import { Price } from "../Price"
-import type { Session } from "../Session"
+import { Session } from "../Session"
 import { Class } from "./class.entity"
 import {
     CreateClassRq,
@@ -60,10 +61,14 @@ export class ClassResolver {
             },
         })
 
-        return classes.map(cls => ({
-            class: cls,
-            sessions: sortSessionsByDayAndTime([]),
-        }))
+        const result: FetchClassListRs[] = []
+
+        for (const item of classes) {
+            const sessions = await Session.find({ where: { token: In(item.session_tokens) } })
+            result.push({ class: item, sessions: sortSessionsByDayAndTime(sessions) })
+        }
+
+        return result
     }
 
     @Query(() => [FetchActiveClassListRs])
@@ -80,10 +85,14 @@ export class ClassResolver {
             },
         })
 
-        return classes.map(cls => ({
-            class: cls,
-            sessions: sortSessionsByDayAndTime([]),
-        }))
+        const result: FetchClassListRs[] = []
+
+        for (const item of classes) {
+            const sessions = await Session.find({ where: { token: In(item.session_tokens) } })
+            result.push({ class: item, sessions: sortSessionsByDayAndTime(sessions) })
+        }
+
+        return result
     }
 
     @Query(() => [Price])
