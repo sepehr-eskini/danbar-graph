@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
@@ -49,7 +50,7 @@ export class ClassResolver {
                 ...(instructor_token && { instructor_token }),
                 ...(is_active !== undefined && is_active !== null && { is_active }),
             },
-            relations: ["sessions", "instructor", "prices"],
+            relations: ["instructor", "prices"],
             order: {
                 is_active: "DESC",
                 created_at: "DESC",
@@ -77,9 +78,12 @@ export class ClassResolver {
         })
 
         // Sort sessions for each class by day and time
-        classes.forEach(classEntity => {
-            classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
-        })
+        // classes.forEach(classEntity => {
+        //     classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
+        // })
+        const allSessions = await Promise.all(
+            classes.map(({ session_tokens }) => Session.find({ where: { token: In(session_tokens) } })),
+        )
 
         return classes
     }
