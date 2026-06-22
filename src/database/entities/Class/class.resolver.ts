@@ -1,18 +1,22 @@
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
-import { In, Like } from "typeorm"
+import { Like } from "typeorm"
 
 import { Admin } from "../Admin"
 import { Personnel } from "../Personnel"
 import { Price } from "../Price"
-import { Register } from "../Register"
-import { E_ScheduleStatus, Schedule } from "../Schedule"
-import { Session } from "../Session"
+import type { Session } from "../Session"
 import { Class } from "./class.entity"
-import { CreateClassRq, EditClassRq, FetchClassListRq, FetchClassPricesRq, ToggleClassStatus } from "./class.rq"
-import type { ClassSessionPopulation } from "./class.rs"
-import { ClassSessionPopulations } from "./class.rs"
+import {
+    CreateClassRq,
+    EditClassRq,
+    FetchActiveClassListRq,
+    FetchClassListRq,
+    FetchClassPricesRq,
+    ToggleClassStatus,
+} from "./class.rq"
+import { FetchActiveClassListRs, FetchClassListRs } from "./class.rs"
 
 const dayOrder: { [key: string]: number } = {
     SAT: 0,
@@ -37,11 +41,11 @@ const sortSessionsByDayAndTime = (sessions: Session[]): Session[] => {
 
 @Resolver()
 export class ClassResolver {
-    @Query(() => [Class])
+    @Query(() => [FetchClassListRs])
     @UseMiddleware([AuthMiddleware])
     async fetchClassList(
         @Arg("body") { title, type, instructor_token, is_active }: FetchClassListRq,
-    ): Promise<Class[]> {
+    ): Promise<FetchClassListRs[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: Like(`%${title.trim()}%`) }),
@@ -49,39 +53,37 @@ export class ClassResolver {
                 ...(instructor_token && { instructor_token }),
                 ...(is_active !== undefined && is_active !== null && { is_active }),
             },
-            relations: ["sessions", "instructor", "prices"],
+            relations: ["instructor", "prices"],
             order: {
                 is_active: "DESC",
                 created_at: "DESC",
             },
         })
 
-        // Sort sessions for each class by day and time
-        classes.forEach(classEntity => {
-            classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
-        })
-
-        return classes
+        return classes.map(cls => ({
+            class: cls,
+            sessions: sortSessionsByDayAndTime([]),
+        }))
     }
 
-    @Query(() => [Class])
+    @Query(() => [FetchActiveClassListRs])
     @UseMiddleware([AuthMiddleware])
-    async fetchActiveClassList(@Arg("body") { title }: FetchClassListRq): Promise<Class[]> {
+    async fetchActiveClassList(@Arg("body") { title }: FetchActiveClassListRq): Promise<FetchActiveClassListRs[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: Like(`%${title.trim()}%`) }),
                 is_active: true,
             },
-            relations: ["sessions", "instructor", "prices"],
-            order: { created_at: "DESC" },
+            relations: ["instructor", "prices"],
+            order: {
+                created_at: "DESC",
+            },
         })
 
-        // Sort sessions for each class by day and time
-        classes.forEach(classEntity => {
-            classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
-        })
-
-        return classes
+        return classes.map(cls => ({
+            class: cls,
+            sessions: sortSessionsByDayAndTime([]),
+        }))
     }
 
     @Query(() => [Price])
@@ -101,68 +103,68 @@ export class ClassResolver {
         return prices
     }
 
-    @Query(() => [ClassSessionPopulations])
-    @UseMiddleware([AuthMiddleware])
-    async fetchClassSessionPopulations(): Promise<ClassSessionPopulations[]> {
-        const classes = await Class.find({
-            where: { is_active: true },
-            relations: ["sessions", "instructor"],
-        })
+    // @Query(() => [ClassSessionPopulations])
+    // @UseMiddleware([AuthMiddleware])
+    // async fetchClassSessionPopulations(): Promise<ClassSessionPopulations[]> {
+    //     const classes = await Class.find({
+    //         where: { is_active: true },
+    //         relations: ["sessions", "instructor"],
+    //     })
 
-        const result: ClassSessionPopulations[] = await Promise.all(
-            classes.map(async classEntity => {
-                const sessionPopulations: ClassSessionPopulation[] = await Promise.all(
-                    classEntity.sessions.map(async session => {
-                        // Find all registers for this class
-                        const registers = await Register.find({
-                            where: { class_token: classEntity.token },
-                            select: ["token"],
-                        })
-                        const registerTokens = registers.map(r => r.token)
+    //     const result: ClassSessionPopulations[] = await Promise.all(
+    //         classes.map(async classEntity => {
+    //             const sessionPopulations: ClassSessionPopulation[] = await Promise.all(
+    //                 classEntity.sessions.map(async session => {
+    //                     // Find all registers for this class
+    //                     const registers = await Register.find({
+    //                         where: { class_token: classEntity.token },
+    //                         select: ["token"],
+    //                     })
+    //                     const registerTokens = registers.map(r => r.token)
 
-                        if (registerTokens.length === 0) {
-                            return {
-                                session_token: session.token,
-                                session,
-                                population_count: 0,
-                            }
-                        }
+    //                     if (registerTokens.length === 0) {
+    //                         return {
+    //                             session_token: session.token,
+    //                             session,
+    //                             population_count: 0,
+    //                         }
+    //                     }
 
-                        // Find all schedules with UNSET status for this session and these registers
-                        const unsetSchedules = await Schedule.find({
-                            where: {
-                                register_token: In(registerTokens),
-                                submission_session_token: session.token,
-                                status: E_ScheduleStatus.UNSET,
-                            },
-                            select: ["register_token"],
-                        })
+    //                     // Find all schedules with UNSET status for this session and these registers
+    //                     const unsetSchedules = await Schedule.find({
+    //                         where: {
+    //                             register_token: In(registerTokens),
+    //                             submission_session_token: session.token,
+    //                             status: E_ScheduleStatus.UNSET,
+    //                         },
+    //                         select: ["register_token"],
+    //                     })
 
-                        // Count unique registrants (each register counted once regardless of how many UNSET schedules they have)
-                        const uniqueRegisterTokens = [...new Set(unsetSchedules.map(s => s.register_token))]
-                        const population_count = uniqueRegisterTokens.length
+    //                     // Count unique registrants (each register counted once regardless of how many UNSET schedules they have)
+    //                     const uniqueRegisterTokens = [...new Set(unsetSchedules.map(s => s.register_token))]
+    //                     const population_count = uniqueRegisterTokens.length
 
-                        return {
-                            session_token: session.token,
-                            session,
-                            population_count,
-                        }
-                    }),
-                )
+    //                     return {
+    //                         session_token: session.token,
+    //                         session,
+    //                         population_count,
+    //                     }
+    //                 }),
+    //             )
 
-                const total_population = sessionPopulations.reduce((sum, sp) => sum + sp.population_count, 0)
+    //             const total_population = sessionPopulations.reduce((sum, sp) => sum + sp.population_count, 0)
 
-                return {
-                    class_token: classEntity.token,
-                    class: classEntity,
-                    sessions: sessionPopulations,
-                    total_population,
-                }
-            }),
-        )
+    //             return {
+    //                 class_token: classEntity.token,
+    //                 class: classEntity,
+    //                 sessions: sessionPopulations,
+    //                 total_population,
+    //             }
+    //         }),
+    //     )
 
-        return result
-    }
+    //     return result
+    // }
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
@@ -192,17 +194,12 @@ export class ClassResolver {
         const instructor = await Personnel.findOne({ where: { token: instructor_token } })
         if (!instructor) throw generateHttpError("instructor_not_found")
 
-        const existingClassWithCombination = await Class.findOne({
-            where: { title, type, instructor_token },
-        })
+        const existingClassWithCombination = await Class.findOne({ where: { title, type, instructor_token } })
         if (existingClassWithCombination) throw generateHttpError("class_title_type_instructor_already_exists")
-
-        const sessions = await Session.find({ where: { token: In(session_tokens) } })
-        if (sessions.length !== session_tokens.length) throw generateHttpError("invalid_session_tokens")
 
         const classEntity = await Class.create({
             title,
-            sessions,
+            session_tokens,
             type,
             instructor_token,
             admin_token: admin.token,
@@ -213,7 +210,9 @@ export class ClassResolver {
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
-    async editClass(@Arg("body") { token, title, type, instructor_token }: EditClassRq): Promise<boolean> {
+    async editClass(
+        @Arg("body") { token, title, session_tokens, type, instructor_token }: EditClassRq,
+    ): Promise<boolean> {
         const classEntity = await Class.findOne({ where: { token } })
         if (!classEntity) throw generateHttpError("class_not_found")
 
@@ -245,6 +244,7 @@ export class ClassResolver {
         }
 
         if (title) classEntity.title = title
+        if (session_tokens) classEntity.session_tokens = session_tokens
         if (type) classEntity.type = type
         if (instructor_token) classEntity.instructor_token = instructor_token
         if (instructor_token) classEntity.instructor = instructor

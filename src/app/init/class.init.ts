@@ -53,7 +53,7 @@ export const initClass = async () => {
 
             const classInstance = Class.create({
                 ...cls,
-                sessions: selectedSessions,
+                session_tokens: selectedSessions.map(session => session.token),
                 instructor_token: instructors[Math.floor(Math.random() * instructors.length)].token,
                 admin_token: "system_initialization",
             })
