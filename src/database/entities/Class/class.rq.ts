@@ -61,6 +61,9 @@ export class EditClassRq {
     @Field({ nullable: true })
     title?: string
 
+    @Field(() => [String])
+    session_tokens: string[]
+
     @Field(() => E_ClassType, { nullable: true })
     type?: E_ClassType
 
