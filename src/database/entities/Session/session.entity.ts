@@ -27,7 +27,6 @@ export class Session extends BaseEntity {
     @Column({ type: "enum", enum: E_Day })
     day: E_Day
 
-    @Field()
     @Column({ type: "uuid" })
     time_period_token: string
 
