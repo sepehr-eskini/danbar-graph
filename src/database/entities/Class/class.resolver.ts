@@ -12,7 +12,7 @@ import { E_ScheduleStatus, Schedule } from "../Schedule"
 import { Session } from "../Session"
 import { Class } from "./class.entity"
 import { CreateClassRq, EditClassRq, FetchClassListRq, FetchClassPricesRq, ToggleClassStatus } from "./class.rq"
-import type { ClassSessionPopulation, FetchClassListRs } from "./class.rs"
+import type { ClassSessionPopulation } from "./class.rs"
 import { ClassSessionPopulations } from "./class.rs"
 
 const dayOrder: { [key: string]: number } = {
@@ -57,19 +57,10 @@ export class ClassResolver {
             },
         })
 
-        const result: FetchClassListRs[] = []
-
-        for (const item of classes) {
-            const sessions = await Session.find({
-                where: {
-                    token: In(item.session_tokens),
-                },
-            })
-            result.push({
-                class: item,
-                sessions,
-            })
-        }
+        // Sort sessions for each class by day and time
+        classes.forEach(classEntity => {
+            classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
+        })
 
         return classes
     }
@@ -90,6 +81,14 @@ export class ClassResolver {
         // classes.forEach(classEntity => {
         //     classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
         // })
+
+        for (const { session_tokens } of classes) {
+            const sessions = await Session.find({
+                where: {
+                    token: In(session_tokens),
+                },
+            })
+        }
 
         return classes
     }

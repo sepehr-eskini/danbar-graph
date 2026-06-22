@@ -29,12 +29,3 @@ export class ClassSessionPopulations {
     @Field(() => Int)
     total_population: number
 }
-
-@ObjectType()
-export class FetchClassListRs {
-    @Field(() => Class)
-    class: Class
-
-    @Field(() => [Session])
-    sessions: Session[]
-}
