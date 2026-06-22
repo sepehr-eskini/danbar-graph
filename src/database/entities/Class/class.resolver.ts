@@ -81,9 +81,14 @@ export class ClassResolver {
         // classes.forEach(classEntity => {
         //     classEntity.sessions = sortSessionsByDayAndTime(classEntity.sessions)
         // })
-        const allSessions = await Promise.all(
-            classes.map(({ session_tokens }) => Session.find({ where: { token: In(session_tokens) } })),
-        )
+
+        for (const { session_tokens } of classes) {
+            const sessions = await Session.find({
+                where: {
+                    token: In(session_tokens),
+                },
+            })
+        }
 
         return classes
     }
