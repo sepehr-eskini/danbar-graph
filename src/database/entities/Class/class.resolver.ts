@@ -12,8 +12,8 @@ import { E_ScheduleStatus, Schedule } from "../Schedule"
 import { Session } from "../Session"
 import { Class } from "./class.entity"
 import { CreateClassRq, EditClassRq, FetchClassListRq, FetchClassPricesRq, ToggleClassStatus } from "./class.rq"
-import type { ClassSessionPopulation, FetchClassListRs } from "./class.rs"
-import { ClassSessionPopulations } from "./class.rs"
+import type { ClassSessionPopulation } from "./class.rs"
+import { ClassSessionPopulations, FetchClassListRs } from "./class.rs"
 
 const dayOrder: { [key: string]: number } = {
     SAT: 0,
@@ -38,11 +38,11 @@ const sortSessionsByDayAndTime = (sessions: Session[]): Session[] => {
 
 @Resolver()
 export class ClassResolver {
-    @Query(() => [Class])
+    @Query(() => [FetchClassListRs])
     @UseMiddleware([AuthMiddleware])
     async fetchClassList(
         @Arg("body") { title, type, instructor_token, is_active }: FetchClassListRq,
-    ): Promise<Class[]> {
+    ): Promise<FetchClassListRs[]> {
         const classes = await Class.find({
             where: {
                 ...(title && { title: Like(`%${title.trim()}%`) }),
@@ -71,7 +71,7 @@ export class ClassResolver {
             })
         }
 
-        return classes
+        return result
     }
 
     @Query(() => [Class])
