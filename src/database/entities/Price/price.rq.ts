@@ -21,16 +21,10 @@ export class EditPriceRq {
     token: string
 
     @Field({ nullable: true })
-    class_token?: string
-
-    @Field({ nullable: true })
     sessions_count?: number
 
     @Field({ nullable: true })
     price?: number
-
-    @Field({ nullable: true })
-    is_active?: boolean
 }
 
 @InputType()
@@ -55,7 +49,7 @@ export class FetchPriceListRq {
 }
 
 @InputType()
-export class DeletePriceRq {
-    @Field()
-    token: string
+export class FetchActivePriceListRq {
+    @Field({ nullable: true })
+    sessions_count?: number
 }

@@ -28,7 +28,8 @@ export class Price extends BaseEntity {
     @Column({ type: "uuid" })
     class_token: string
 
-    @ManyToOne(() => Class)
+    @Field(() => Class)
+    @ManyToOne(() => Class, { eager: true })
     @JoinColumn({ name: "class_token", referencedColumnName: "token" })
     class: Class
 
