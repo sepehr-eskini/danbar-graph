@@ -28,9 +28,12 @@ export class CreateRegisterRq {
     payment_price: number
 
     @Field()
+    discount_price: number
+
+    @Field()
     calendar_image_url: string
 
-    @Field(() => [SubmissionInput]) // Explicitly specify the type
+    @Field(() => [SubmissionInput])
     submissions: SubmissionInput[]
 }
 
@@ -44,6 +47,9 @@ export class EditRegisterRq {
 
     @Field({ nullable: true })
     payment_price?: number
+
+    @Field({ nullable: true })
+    discount_price?: number
 }
 
 @InputType()
@@ -62,4 +68,7 @@ export class FetchRegisterListRq {
 
     @Field({ nullable: true })
     admin_token?: string
+
+    @Field({ nullable: true })
+    last_schedule_date?: string
 }

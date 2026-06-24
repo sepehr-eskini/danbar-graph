@@ -16,7 +16,8 @@ export class RegisterResolver {
     @Query(() => [Register])
     @UseMiddleware([AuthMiddleware])
     async fetchRegisters(
-        @Arg("body") { user_token, class_token, price_token, payment_date, admin_token }: FetchRegisterListRq,
+        @Arg("body")
+        { user_token, class_token, price_token, payment_date, admin_token, last_schedule_date }: FetchRegisterListRq,
     ): Promise<Register[]> {
         const registers = await Register.find({
             where: {
@@ -25,6 +26,7 @@ export class RegisterResolver {
                 ...(price_token && { price_token }),
                 ...(payment_date && { payment_date }),
                 ...(admin_token && { admin_token }),
+                ...(last_schedule_date && { last_schedule_date }),
             },
             relations: ["user", "class", "price", "schedules"],
             order: { created_at: "DESC" },
@@ -44,6 +46,7 @@ export class RegisterResolver {
             price_token,
             payment_date,
             payment_price,
+            discount_price,
             calendar_image_url,
             submissions,
         }: CreateRegisterRq,
@@ -57,13 +60,24 @@ export class RegisterResolver {
         const price = await Price.findOne({ where: { token: price_token } })
         if (!price) throw generateHttpError("price_not_found")
 
+        // Sort submissions by date and get the last one
+        const sortedSubmissions = [...submissions].sort((a, b) => {
+            const dateA = new Date(a.date).getTime()
+            const dateB = new Date(b.date).getTime()
+            return dateB - dateA // Descending order (latest first)
+        })
+
+        const lastScheduleDate = sortedSubmissions[0]?.date
+
         const register = await Register.create({
             user_token,
             class_token,
             price_token,
             payment_date,
             payment_price,
+            discount_price,
             calendar_image_url,
+            last_schedule_date: lastScheduleDate,
             admin_token: admin.token,
         }).save()
 
@@ -86,12 +100,15 @@ export class RegisterResolver {
 
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
-    async editRegister(@Arg("body") { token, payment_date, payment_price }: EditRegisterRq): Promise<boolean> {
+    async editRegister(
+        @Arg("body") { token, payment_date, payment_price, discount_price }: EditRegisterRq,
+    ): Promise<boolean> {
         const register = await Register.findOne({ where: { token } })
         if (!register) throw generateHttpError("register_not_found")
 
         if (payment_date) register.payment_date = payment_date
         if (payment_price !== undefined) register.payment_price = payment_price
+        if (discount_price !== undefined) register.discount_price = discount_price
 
         await register.save()
 
@@ -187,7 +204,6 @@ export class RegisterResolver {
                     }
                 }
 
-                // Find the most recent unset schedule by submission_date
                 const latestUnset = unsetSchedules.reduce((latest, current) => {
                     const latestDate = new Date(latest.submission_date).getTime()
                     const currentDate = new Date(current.submission_date).getTime()

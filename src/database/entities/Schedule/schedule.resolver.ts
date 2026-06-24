@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
-import { Admin } from "typeorm"
+import { Admin, In } from "typeorm"
 
 import { Personnel } from "../Personnel"
+import { Register } from "../Register"
 import { Session } from "../Session"
 import { Schedule } from "./schedule.entity"
 import { EditScheduleRq, FetchScheduleListRq, SetScheduleRq } from "./schedule.rq"
@@ -16,27 +18,53 @@ export class ScheduleResolver {
     async fetchSchedules(
         @Arg("body")
         {
-            register_token,
+            user_token,
+            class_token,
             submission_date,
             submission_session_token,
             submission_instructor_token,
-            presence_date,
-            presence_session_token,
-            presence_instructor_token,
             status,
         }: FetchScheduleListRq,
     ): Promise<Schedule[]> {
+        // Build where conditions for direct Schedule fields
+        const whereConditions: Record<string, any> = {
+            ...(submission_date && { submission_date }),
+            ...(submission_session_token && { submission_session_token }),
+            ...(submission_instructor_token && { submission_instructor_token }),
+            ...(status && { status }),
+        }
+
+        // If user_token or class_token filters are provided, we need to join with Register
+        if (user_token || class_token) {
+            // Get registers matching the filters
+            const registerWhereConditions: Record<string, any> = {}
+
+            if (user_token) {
+                registerWhereConditions.user_token = user_token
+            }
+
+            if (class_token) {
+                registerWhereConditions.class_token = class_token
+            }
+
+            const matchingRegisters = await Register.find({
+                where: registerWhereConditions,
+            })
+
+            // Extract register tokens from matching registers
+            const registerTokens = matchingRegisters.map(reg => reg.token)
+
+            // If no matching registers, return empty array
+            if (registerTokens.length === 0) {
+                return []
+            }
+
+            // Add register_token to where conditions for schedules
+            whereConditions.register_token = In(registerTokens)
+        }
+
         const schedules = await Schedule.find({
-            where: {
-                ...(register_token && { register_token }),
-                ...(submission_date && { submission_date }),
-                ...(submission_session_token && { submission_session_token }),
-                ...(submission_instructor_token && { submission_instructor_token }),
-                ...(presence_date && { presence_date }),
-                ...(presence_session_token && { presence_session_token }),
-                ...(presence_instructor_token && { presence_instructor_token }),
-                ...(status && { status }),
-            },
+            where: whereConditions,
             relations: ["register", "register.user", "register.class"],
             order: { created_at: "DESC" },
         })

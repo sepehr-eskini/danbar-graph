@@ -63,12 +63,20 @@ export class Register extends BaseEntity {
     payment_price: number
 
     @Field()
+    @Column({ type: "numeric", default: 0 })
+    discount_price: number
+
+    @Field()
     @Column()
     calendar_image_url: string
 
     @Field(() => [Schedule])
     @OneToMany(() => Schedule, schedule => schedule.register)
     schedules: Schedule[]
+
+    @Field()
+    @Column({ type: "date" })
+    last_schedule_date: string
 
     @CreateDateColumn()
     created_at: Date

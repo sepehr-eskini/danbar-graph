@@ -5,7 +5,10 @@ import { E_ScheduleStatus } from "./schedule.types"
 @InputType()
 export class FetchScheduleListRq {
     @Field({ nullable: true })
-    register_token?: string
+    user_token?: string
+
+    @Field({ nullable: true })
+    class_token?: string
 
     @Field({ nullable: true })
     submission_date?: string
@@ -15,15 +18,6 @@ export class FetchScheduleListRq {
 
     @Field({ nullable: true })
     submission_instructor_token?: string
-
-    @Field({ nullable: true })
-    presence_date?: string
-
-    @Field({ nullable: true })
-    presence_session_token?: string
-
-    @Field({ nullable: true })
-    presence_instructor_token?: string
 
     @Field(() => E_ScheduleStatus, { nullable: true })
     status?: E_ScheduleStatus
