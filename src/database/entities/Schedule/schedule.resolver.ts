@@ -30,10 +30,17 @@ export class ScheduleResolver {
     ): Promise<Schedule[]> {
         // 1. Initialize QueryBuilder with alias 'schedule'
         const query = Schedule.createQueryBuilder("schedule")
-            // Join and select your relations to properly populate GraphQL schema requirements
+            // Join and select Register relation paths
             .leftJoinAndSelect("schedule.register", "register")
             .leftJoinAndSelect("register.user", "user")
             .leftJoinAndSelect("register.class", "class")
+            .leftJoinAndSelect("class.instructor", "class_instructor")
+
+            // Join direct Schedule fields to satisfy { eager: true } properties
+            // and prevent GraphQL "Cannot return null" crashes
+            .leftJoinAndSelect("schedule.submission_instructor", "submission_instructor")
+            .leftJoinAndSelect("schedule.submission_session", "submission_session")
+            .leftJoinAndSelect("submission_session.time_period", "time_period")
 
         // 2. Apply filtering parameters for direct Schedule table fields
         if (submission_date) {
@@ -61,15 +68,13 @@ export class ScheduleResolver {
             query.andWhere("register.class_token = :class_token", { class_token })
         }
         if (payment_date) {
-            // Filter by the register entity's payment_date field
             query.andWhere("register.payment_date = :payment_date", { payment_date })
         }
 
         // 4. Fetch the data from the database
         const schedules = await query.getMany()
 
-        // 5. Apply the robust runtime array sorting to prevent TypeORM's
-        // { eager: true } background entities from breaking the structural layout sequence.
+        // 5. Apply runtime array sorting to prevent any background eager engine layout shuffling.
         return schedules.sort((a, b) => {
             const dateA = a.register?.created_at ? new Date(a.register.created_at).getTime() : 0
             const dateB = b.register?.created_at ? new Date(b.register.created_at).getTime() : 0
@@ -304,7 +309,12 @@ export class ScheduleResolver {
         } else {
             // Allows fallback results matching UNSET, OFFSET, or PRESENT
             query.andWhere("schedule.status IN (:...statuses)", {
-                statuses: [E_ScheduleStatus.UNSET, E_ScheduleStatus.OFFSET, E_ScheduleStatus.PRESENT],
+                statuses: [
+                    E_ScheduleStatus.UNSET,
+                    E_ScheduleStatus.OFFSET,
+                    E_ScheduleStatus.PRESENT,
+                    E_ScheduleStatus.ABSENT,
+                ],
             })
         }
 
