@@ -298,11 +298,14 @@ export class ScheduleResolver {
             // Core Filters
             .where("schedule.submission_date = :tomorrowStr", { tomorrowStr })
 
-        // Apply fallback to status inside query if not explicitly passed from body request
+        // Apply status parameter filtering or default fallback array mapping
         if (status) {
             query.andWhere("schedule.status = :status", { status })
         } else {
-            query.andWhere("schedule.status = :status", { status: E_ScheduleStatus.UNSET })
+            // Allows fallback results matching UNSET, OFFSET, or PRESENT
+            query.andWhere("schedule.status IN (:...statuses)", {
+                statuses: [E_ScheduleStatus.UNSET, E_ScheduleStatus.OFFSET, E_ScheduleStatus.PRESENT],
+            })
         }
 
         // Apply incoming dynamic filters for Schedule table fields
