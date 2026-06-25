@@ -13,6 +13,7 @@ import {
     CreateClassRq,
     EditClassRq,
     FetchActiveClassListRq,
+    FetchClassByTokenRq,
     FetchClassListRq,
     FetchClassPricesRq,
     ToggleClassStatus,
@@ -261,5 +262,16 @@ export class ClassResolver {
         await classEntity.save()
 
         return true
+    }
+
+    @Query(() => FetchClassListRs)
+    @UseMiddleware([AuthMiddleware])
+    async fetchClassByToken(@Arg("body") { token }: FetchClassByTokenRq): Promise<FetchClassListRs> {
+        const fetchedClass = await Class.findOne({ where: { token }, relations: ["instructor", "prices"] })
+        const sessions = await Session.find({ where: { token: In(fetchedClass.session_tokens) } })
+
+        const result: FetchClassListRs = { class: fetchedClass, sessions: sortSessionsByDayAndTime(sessions) }
+
+        return result
     }
 }

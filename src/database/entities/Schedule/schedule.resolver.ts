@@ -8,7 +8,7 @@ import { Personnel } from "../Personnel"
 import { Register } from "../Register"
 import { Session } from "../Session"
 import { Schedule } from "./schedule.entity"
-import { EditScheduleRq, FetchScheduleListRq, SetScheduleRq } from "./schedule.rq"
+import { EditScheduleRq, EditScheduleSubmissionRq, FetchScheduleListRq, SetScheduleRq } from "./schedule.rq"
 import { E_ScheduleStatus } from "./schedule.types"
 
 @Resolver()
@@ -126,6 +126,58 @@ export class ScheduleResolver {
         }
 
         await schedule.save()
+
+        return true
+    }
+
+    @Mutation(() => Boolean)
+    @UseMiddleware([AuthMiddleware])
+    async editScheduleSubmission(
+        @Ctx("admin") admin: Admin,
+        @Arg("body") { token, submission_date, submission_session_token }: EditScheduleSubmissionRq,
+    ): Promise<boolean> {
+        // Step 1: Fetch the schedule with its register
+        const schedule = await Schedule.findOne({
+            where: { token },
+            relations: ["register"],
+        })
+        if (!schedule) throw generateHttpError("schedule_not_found")
+
+        // Step 2: Get the register to access class information
+        const register = await Register.findOne({
+            where: { token: schedule.register_token },
+            relations: ["class"],
+        })
+        if (!register) throw generateHttpError("register_not_found")
+
+        // Step 3: Fetch all sessions for the class
+        const allClassSessions = await Session.find()
+
+        // Filter sessions that belong to the class (session_tokens should be in class.session_tokens)
+        const classSessions = allClassSessions.filter(session => register.class.session_tokens.includes(session.token))
+
+        // Step 4: Validate that the submission_session_token belongs to this class
+        const selectedSession = classSessions.find(session => session.token === submission_session_token)
+        if (!selectedSession) {
+            throw generateHttpError("invalid_session_for_class")
+        }
+
+        // Step 5: Update schedule's submission details
+        schedule.submission_date = submission_date
+        schedule.submission_session_token = submission_session_token
+        schedule.submission_instructor_token = register.class.instructor_token
+
+        await schedule.save()
+
+        // Step 6: Check if new submission_date is larger than register's last_schedule_date
+        const newSubmissionDateMs = new Date(submission_date).getTime()
+        const lastScheduleDateMs = new Date(register.last_schedule_date).getTime()
+
+        // Step 7: If new date is larger, update register's last_schedule_date
+        if (newSubmissionDateMs > lastScheduleDateMs) {
+            register.last_schedule_date = submission_date
+            await register.save()
+        }
 
         return true
     }

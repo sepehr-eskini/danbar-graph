@@ -43,6 +43,7 @@ export type T_Error =
 
     // Schedule
     | "schedule_not_found"
+    | "invalid_session_for_class"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string

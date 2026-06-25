@@ -46,5 +46,6 @@ export const ErrorMessages: T_ErrorMessages = {
 
         // Schedule
         schedule_not_found: "برنامه در سیستم وجود ندارد",
+        invalid_session_for_class: "سانس انتخابی برای کلاس وجود ندارد",
     },
 }

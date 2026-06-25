@@ -70,3 +70,9 @@ export class EditClassRq {
     @Field({ nullable: true })
     instructor_token?: string
 }
+
+@InputType()
+export class FetchClassByTokenRq {
+    @Field()
+    token: string
+}
