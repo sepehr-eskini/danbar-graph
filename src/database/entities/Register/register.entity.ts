@@ -15,6 +15,7 @@ import { Class } from "../Class/class.entity"
 import { Price } from "../Price/price.entity"
 import { Schedule } from "../Schedule/schedule.entity"
 import { User } from "../User/user.entity"
+import { E_RegisterStatus } from "./register.types"
 
 @Entity("tbl_register")
 @ObjectType()
@@ -67,6 +68,10 @@ export class Register extends BaseEntity {
     discount_price: number
 
     @Field()
+    @Column({ type: "numeric", default: 0 })
+    return_price: number
+
+    @Field()
     @Column()
     calendar_image_url: string
 
@@ -77,6 +82,10 @@ export class Register extends BaseEntity {
     @Field()
     @Column({ type: "date" })
     last_schedule_date: string
+
+    @Field(() => E_RegisterStatus)
+    @Column({ type: "enum", enum: E_RegisterStatus, default: E_RegisterStatus.ACTIVE })
+    status: E_RegisterStatus
 
     @CreateDateColumn()
     created_at: Date

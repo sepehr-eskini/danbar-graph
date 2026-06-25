@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
@@ -8,8 +9,9 @@ import { Price } from "../Price"
 import { E_ScheduleStatus, Schedule } from "../Schedule"
 import { User } from "../User"
 import { Register } from "./register.entity"
-import { CreateRegisterRq, EditRegisterRq, FetchRegisterListRq } from "./register.rq"
+import { CreateRegisterRq, EditRegisterRq, FetchRegisterListRq, SetRegisterRq } from "./register.rq"
 import { UserWithUnsetScheduleInfo } from "./register.rs"
+import { E_RegisterStatus } from "./register.types"
 
 @Resolver()
 export class RegisterResolver {
@@ -101,7 +103,7 @@ export class RegisterResolver {
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
     async editRegister(
-        @Arg("body") { token, payment_date, payment_price, discount_price }: EditRegisterRq,
+        @Arg("body") { token, payment_date, payment_price, discount_price, return_price }: EditRegisterRq,
     ): Promise<boolean> {
         const register = await Register.findOne({ where: { token } })
         if (!register) throw generateHttpError("register_not_found")
@@ -109,6 +111,7 @@ export class RegisterResolver {
         if (payment_date) register.payment_date = payment_date
         if (payment_price !== undefined) register.payment_price = payment_price
         if (discount_price !== undefined) register.discount_price = discount_price
+        if (return_price !== undefined) register.return_price = return_price
 
         await register.save()
 
@@ -221,5 +224,37 @@ export class RegisterResolver {
 
         // Filter out users with no unset schedules and sort by unset_count (descending - most unset first)
         return result.filter(item => item.unset_count > 0).sort((a, b) => b.unset_count - a.unset_count)
+    }
+
+    @Mutation(() => Boolean)
+    @UseMiddleware([AuthMiddleware])
+    async setRegister(@Arg("body") { token, status }: SetRegisterRq): Promise<boolean> {
+        const register = await Register.findOne({ where: { token } })
+        if (!register) throw generateHttpError("register_not_found")
+
+        register.status = status
+
+        if (status === E_RegisterStatus.CHANGE || status === E_RegisterStatus.CANCEL) {
+            const registerUnsetSchedules = await Schedule.find({
+                where: {
+                    register_token: register.token,
+                    status: E_ScheduleStatus.UNSET,
+                },
+            })
+
+            for (const schedule of registerUnsetSchedules) {
+                schedule.status = E_ScheduleStatus.CANCEL
+                schedule.presence_date = null
+                schedule.presence_instructor_token = null
+                schedule.presence_session_token = null
+                schedule.presence_instructor = null
+                schedule.presence_session = null
+                await schedule.save()
+            }
+        }
+
+        await register.save()
+
+        return true
     }
 }

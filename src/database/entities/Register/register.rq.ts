@@ -1,5 +1,6 @@
-// register.rq.ts
 import { Field, InputType } from "type-graphql"
+
+import { E_RegisterStatus } from "./register.types"
 
 @InputType()
 export class SubmissionInput {
@@ -50,6 +51,9 @@ export class EditRegisterRq {
 
     @Field({ nullable: true })
     discount_price?: number
+
+    @Field({ nullable: true })
+    return_price?: number
 }
 
 @InputType()
@@ -71,4 +75,13 @@ export class FetchRegisterListRq {
 
     @Field({ nullable: true })
     last_schedule_date?: string
+}
+
+@InputType()
+export class SetRegisterRq {
+    @Field()
+    token: string
+
+    @Field(() => E_RegisterStatus)
+    status: E_RegisterStatus
 }
