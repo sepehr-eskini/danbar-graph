@@ -2,7 +2,7 @@
 import { generateHttpError } from "@core/functions"
 import { AuthMiddleware } from "@core/middlewares"
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
-import { Admin, In } from "typeorm"
+import { Admin } from "typeorm"
 
 import { Personnel } from "../Personnel"
 import { Register } from "../Register"
@@ -25,52 +25,65 @@ export class ScheduleResolver {
             submission_session_token,
             submission_instructor_token,
             status,
+            payment_date,
         }: FetchScheduleListRq,
     ): Promise<Schedule[]> {
-        // Build where conditions for direct Schedule fields
-        const whereConditions: Record<string, any> = {
-            ...(submission_date && { submission_date }),
-            ...(submission_session_token && { submission_session_token }),
-            ...(submission_instructor_token && { submission_instructor_token }),
-            ...(status && { status }),
+        // 1. Initialize QueryBuilder with alias 'schedule'
+        const query = Schedule.createQueryBuilder("schedule")
+            // Join and select your relations to properly populate GraphQL schema requirements
+            .leftJoinAndSelect("schedule.register", "register")
+            .leftJoinAndSelect("register.user", "user")
+            .leftJoinAndSelect("register.class", "class")
+
+        // 2. Apply filtering parameters for direct Schedule table fields
+        if (submission_date) {
+            query.andWhere("schedule.submission_date = :submission_date", { submission_date })
         }
-
-        // If user_token or class_token filters are provided, we need to join with Register
-        if (user_token || class_token) {
-            // Get registers matching the filters
-            const registerWhereConditions: Record<string, any> = {}
-
-            if (user_token) {
-                registerWhereConditions.user_token = user_token
-            }
-
-            if (class_token) {
-                registerWhereConditions.class_token = class_token
-            }
-
-            const matchingRegisters = await Register.find({
-                where: registerWhereConditions,
+        if (submission_session_token) {
+            query.andWhere("schedule.submission_session_token = :submission_session_token", {
+                submission_session_token,
             })
-
-            // Extract register tokens from matching registers
-            const registerTokens = matchingRegisters.map(reg => reg.token)
-
-            // If no matching registers, return empty array
-            if (registerTokens.length === 0) {
-                return []
-            }
-
-            // Add register_token to where conditions for schedules
-            whereConditions.register_token = In(registerTokens)
+        }
+        if (submission_instructor_token) {
+            query.andWhere("schedule.submission_instructor_token = :submission_instructor_token", {
+                submission_instructor_token,
+            })
+        }
+        if (status) {
+            query.andWhere("schedule.status = :status", { status })
         }
 
-        const schedules = await Schedule.find({
-            where: whereConditions,
-            relations: ["register", "register.user", "register.class"],
-            order: { created_at: "DESC" },
-        })
+        // 3. Apply relational filtering parameters on the Register entity tables
+        if (user_token) {
+            query.andWhere("register.user_token = :user_token", { user_token })
+        }
+        if (class_token) {
+            query.andWhere("register.class_token = :class_token", { class_token })
+        }
+        if (payment_date) {
+            // Filter by the register entity's payment_date field
+            query.andWhere("register.payment_date = :payment_date", { payment_date })
+        }
 
-        return schedules
+        // 4. Fetch the data from the database
+        const schedules = await query.getMany()
+
+        // 5. Apply the robust runtime array sorting to prevent TypeORM's
+        // { eager: true } background entities from breaking the structural layout sequence.
+        return schedules.sort((a, b) => {
+            const dateA = a.register?.created_at ? new Date(a.register.created_at).getTime() : 0
+            const dateB = b.register?.created_at ? new Date(b.register.created_at).getTime() : 0
+
+            // Primary Sort: register.created_at DESC
+            if (dateB !== dateA) {
+                return dateB - dateA
+            }
+
+            // Secondary Sort: schedule.submission_date ASC
+            const subDateA = a.submission_date || ""
+            const subDateB = b.submission_date || ""
+            return subDateA.localeCompare(subDateB)
+        })
     }
 
     @Mutation(() => Boolean)

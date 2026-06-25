@@ -21,6 +21,9 @@ export class FetchScheduleListRq {
 
     @Field(() => E_ScheduleStatus, { nullable: true })
     status?: E_ScheduleStatus
+
+    @Field({ nullable: true })
+    payment_date?: string
 }
 
 @InputType()
