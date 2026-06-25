@@ -107,7 +107,8 @@ export class ScheduleResolver {
     ): Promise<boolean> {
         const schedule = await Schedule.findOne({ where: { token } })
         if (!schedule) throw generateHttpError("schedule_not_found")
-        if (schedule.status !== E_ScheduleStatus.PRESENT) throw generateHttpError("internal_server_error")
+        if (schedule.status !== E_ScheduleStatus.PRESENT && schedule.status !== E_ScheduleStatus.OFFSET)
+            throw generateHttpError("internal_server_error")
 
         const presenceSession = await Session.findOne({ where: { token: presence_session_token } })
         const presenceInstructor = await Personnel.findOne({ where: { token: presence_instructor_token } })

@@ -52,3 +52,15 @@ export class EditScheduleRq {
     @Field({ nullable: true })
     presence_instructor_token?: string
 }
+
+@InputType()
+export class EditScheduleSubmissionRq {
+    @Field()
+    token: string
+
+    @Field()
+    submission_date: string
+
+    @Field()
+    submission_session_token: string
+}
