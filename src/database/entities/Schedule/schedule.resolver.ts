@@ -255,14 +255,25 @@ export class ScheduleResolver {
 
     @Query(() => [FetchTomorrowSchedulesRs])
     @UseMiddleware([AuthMiddleware])
-    async fetchTomorrowSchedules(): Promise<FetchTomorrowSchedulesRs[]> {
+    async fetchTomorrowSchedules(
+        @Arg("body")
+        {
+            user_token,
+            class_token,
+            submission_date,
+            submission_session_token,
+            submission_instructor_token,
+            status,
+            payment_date,
+        }: FetchScheduleListRq,
+    ): Promise<FetchTomorrowSchedulesRs[]> {
         // 1. Calculate tomorrow's date representation in 'YYYY-MM-DD' format
         const tomorrow = new Date()
         tomorrow.setDate(tomorrow.getDate() + 1)
         const tomorrowStr = tomorrow.toISOString().split("T")[0]
 
         // 2. Build the comprehensive query utilizing deep joins for all non-nullable relationships
-        const schedules = await Schedule.createQueryBuilder("schedule")
+        const query = Schedule.createQueryBuilder("schedule")
             // A. Join Register and its non-nullable relations
             .leftJoinAndSelect("schedule.register", "register")
             .leftJoinAndSelect("register.user", "user")
@@ -284,14 +295,46 @@ export class ScheduleResolver {
             .leftJoinAndSelect("presence_session.time_period", "presence_time_period")
             .leftJoinAndSelect("schedule.presence_instructor", "presence_instructor")
 
-            // Filter conditions
+            // Core Filters
             .where("schedule.submission_date = :tomorrowStr", { tomorrowStr })
-            .andWhere("schedule.status = :status", { status: E_ScheduleStatus.UNSET })
 
-            // Sort by class title first, then by the class instructor's full name
-            .orderBy("class.title", "ASC")
-            .addOrderBy("class_instructor.full_name", "ASC")
-            .getMany()
+        // Apply fallback to status inside query if not explicitly passed from body request
+        if (status) {
+            query.andWhere("schedule.status = :status", { status })
+        } else {
+            query.andWhere("schedule.status = :status", { status: E_ScheduleStatus.UNSET })
+        }
+
+        // Apply incoming dynamic filters for Schedule table fields
+        if (submission_date) {
+            query.andWhere("schedule.submission_date = :submission_date", { submission_date })
+        }
+        if (submission_session_token) {
+            query.andWhere("schedule.submission_session_token = :submission_session_token", {
+                submission_session_token,
+            })
+        }
+        if (submission_instructor_token) {
+            query.andWhere("schedule.submission_instructor_token = :submission_instructor_token", {
+                submission_instructor_token,
+            })
+        }
+
+        // Apply incoming relational dynamic filters on the Register entity tables
+        if (user_token) {
+            query.andWhere("register.user_token = :user_token", { user_token })
+        }
+        if (class_token) {
+            query.andWhere("register.class_token = :class_token", { class_token })
+        }
+        if (payment_date) {
+            query.andWhere("register.payment_date = :payment_date", { payment_date })
+        }
+
+        // Sort by class title first, then by the class instructor's full name
+        query.orderBy("class.title", "ASC").addOrderBy("class_instructor.full_name", "ASC")
+
+        const schedules = await query.getMany()
 
         // 3. Map records safely to output structure
         return schedules.map(schedule => {
