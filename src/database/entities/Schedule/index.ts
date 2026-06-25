@@ -1,4 +1,5 @@
 export * from "./schedule.entity"
 export * from "./schedule.resolver"
 export * from "./schedule.rq"
+export * from "./schedule.rs"
 export * from "./schedule.types"

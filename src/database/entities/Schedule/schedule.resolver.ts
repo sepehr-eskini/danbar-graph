@@ -9,6 +9,7 @@ import { Register } from "../Register"
 import { Session } from "../Session"
 import { Schedule } from "./schedule.entity"
 import { EditScheduleRq, EditScheduleSubmissionRq, FetchScheduleListRq, SetScheduleRq } from "./schedule.rq"
+import { FetchTomorrowSchedulesRs } from "./schedule.rs"
 import { E_ScheduleStatus } from "./schedule.types"
 
 @Resolver()
@@ -237,5 +238,56 @@ export class ScheduleResolver {
         await register.save()
 
         return true
+    }
+
+    @Query(() => [FetchTomorrowSchedulesRs])
+    @UseMiddleware([AuthMiddleware])
+    async fetchTomorrowSchedules(): Promise<FetchTomorrowSchedulesRs[]> {
+        // 1. Calculate tomorrow's date representation in 'YYYY-MM-DD' format
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        const tomorrowStr = tomorrow.toISOString().split("T")[0]
+
+        // 2. Build the comprehensive query utilizing deep joins for all non-nullable relationships
+        const schedules = await Schedule.createQueryBuilder("schedule")
+            // A. Join Register and its non-nullable relations
+            .leftJoinAndSelect("schedule.register", "register")
+            .leftJoinAndSelect("register.user", "user")
+            .leftJoinAndSelect("register.price", "price")
+            .leftJoinAndSelect("register.class", "class")
+
+            // B. Join nested Class non-nullable relations (like its instructor personnel)
+            .leftJoinAndSelect("class.instructor", "class_instructor")
+
+            // C. Join directly assigned Schedule submission targets
+            .leftJoinAndSelect("schedule.submission_instructor", "submission_instructor")
+            .leftJoinAndSelect("schedule.submission_session", "submission_session")
+
+            // D. Fix for time_period error: Join Session's mandatory inner relation
+            .leftJoinAndSelect("submission_session.time_period", "time_period")
+
+            // E. Optional/Nullable Presence joins (safe precaution to prevent graph issues if selected fields require them)
+            .leftJoinAndSelect("schedule.presence_session", "presence_session")
+            .leftJoinAndSelect("presence_session.time_period", "presence_time_period")
+            .leftJoinAndSelect("schedule.presence_instructor", "presence_instructor")
+
+            // Filter conditions
+            .where("schedule.submission_date = :tomorrowStr", { tomorrowStr })
+            .andWhere("schedule.status = :status", { status: E_ScheduleStatus.UNSET })
+
+            // Sort by class title first, then by the class instructor's full name
+            .orderBy("class.title", "ASC")
+            .addOrderBy("class_instructor.full_name", "ASC")
+            .getMany()
+
+        // 3. Map records safely to output structure
+        return schedules.map(schedule => {
+            const isLastSession = schedule.register?.last_schedule_date === tomorrowStr
+
+            return {
+                schedule,
+                is_last_session: isLastSession,
+            }
+        })
     }
 }
