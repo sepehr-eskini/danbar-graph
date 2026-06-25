@@ -10,17 +10,17 @@ import { E_ScheduleStatus, Schedule } from "../Schedule"
 import { User } from "../User"
 import { Register } from "./register.entity"
 import { CreateRegisterRq, EditRegisterRq, FetchRegisterListRq, SetRegisterRq } from "./register.rq"
-import { UserWithUnsetScheduleInfo } from "./register.rs"
+import { FetchRegistersRs, UserWithUnsetScheduleInfo } from "./register.rs"
 import { E_RegisterStatus } from "./register.types"
 
 @Resolver()
 export class RegisterResolver {
-    @Query(() => [Register])
+    @Query(() => [FetchRegistersRs])
     @UseMiddleware([AuthMiddleware])
     async fetchRegisters(
         @Arg("body")
         { user_token, class_token, price_token, payment_date, admin_token, last_schedule_date }: FetchRegisterListRq,
-    ): Promise<Register[]> {
+    ): Promise<FetchRegistersRs[]> {
         const registers = await Register.find({
             where: {
                 ...(user_token && { user_token }),
@@ -34,7 +34,23 @@ export class RegisterResolver {
             order: { created_at: "DESC" },
         })
 
-        return registers
+        // Map and count schedule statuses for each register record
+        return registers.map(register => {
+            const schedules = register.schedules || []
+
+            const schedule_status = {
+                unset: schedules.filter(s => s.status === E_ScheduleStatus.UNSET).length,
+                present: schedules.filter(s => s.status === E_ScheduleStatus.PRESENT).length,
+                absent: schedules.filter(s => s.status === E_ScheduleStatus.ABSENT).length,
+                cancel: schedules.filter(s => s.status === E_ScheduleStatus.CANCEL).length,
+                offset: schedules.filter(s => s.status === E_ScheduleStatus.OFFSET).length,
+            }
+
+            return {
+                register,
+                schedule_status,
+            }
+        })
     }
 
     @Mutation(() => Boolean)
