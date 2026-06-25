@@ -75,9 +75,14 @@ export class ScheduleResolver {
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
     async setSchedule(@Arg("body") { token, status }: SetScheduleRq): Promise<boolean> {
-        const schedule = await Schedule.findOne({ where: { token } })
+        // Step 1: Fetch schedule with register relation
+        const schedule = await Schedule.findOne({
+            where: { token },
+            relations: ["register"],
+        })
         if (!schedule) throw generateHttpError("schedule_not_found")
 
+        // Step 2: Update schedule status
         schedule.status = status
 
         if (status === E_ScheduleStatus.PRESENT) {
@@ -95,6 +100,40 @@ export class ScheduleResolver {
         }
 
         await schedule.save()
+
+        // Step 3: Update register's last_schedule_date based on non-canceled schedules
+        const register = await Register.findOne({
+            where: { token: schedule.register_token },
+        })
+
+        if (register) {
+            // Get all schedules for this register
+            const allSchedules = await Schedule.find({
+                where: {
+                    register_token: register.token,
+                },
+            })
+
+            // Filter out CANCEL status schedules
+            const nonCanceledSchedules = allSchedules.filter(sched => sched.status !== E_ScheduleStatus.CANCEL)
+
+            // Find the latest submission_date from non-canceled schedules
+            if (nonCanceledSchedules.length > 0) {
+                const latestSchedule = nonCanceledSchedules.reduce((latest, current) => {
+                    const latestDate = new Date(latest.submission_date).getTime()
+                    const currentDate = new Date(current.submission_date).getTime()
+                    return currentDate > latestDate ? current : latest
+                })
+
+                // Update register's last_schedule_date
+                register.last_schedule_date = latestSchedule.submission_date
+            } else {
+                // If all schedules are canceled, set to null
+                register.last_schedule_date = null
+            }
+
+            await register.save()
+        }
 
         return true
     }
@@ -169,15 +208,33 @@ export class ScheduleResolver {
 
         await schedule.save()
 
-        // Step 6: Check if new submission_date is larger than register's last_schedule_date
-        const newSubmissionDateMs = new Date(submission_date).getTime()
-        const lastScheduleDateMs = new Date(register.last_schedule_date).getTime()
+        // Step 6: Calculate new last_schedule_date from non-canceled schedules
+        // Get all schedules for this register
+        const allSchedules = await Schedule.find({
+            where: {
+                register_token: register.token,
+            },
+        })
 
-        // Step 7: If new date is larger, update register's last_schedule_date
-        if (newSubmissionDateMs > lastScheduleDateMs) {
-            register.last_schedule_date = submission_date
-            await register.save()
+        // Filter out CANCEL status schedules
+        const nonCanceledSchedules = allSchedules.filter(sched => sched.status !== E_ScheduleStatus.CANCEL)
+
+        // Step 7: Find the latest submission_date from non-canceled schedules
+        if (nonCanceledSchedules.length > 0) {
+            const latestSchedule = nonCanceledSchedules.reduce((latest, current) => {
+                const latestDate = new Date(latest.submission_date).getTime()
+                const currentDate = new Date(current.submission_date).getTime()
+                return currentDate > latestDate ? current : latest
+            })
+
+            // Update register's last_schedule_date
+            register.last_schedule_date = latestSchedule.submission_date
+        } else {
+            // If all schedules are canceled, set to null
+            register.last_schedule_date = null
         }
+
+        await register.save()
 
         return true
     }

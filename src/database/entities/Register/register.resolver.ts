@@ -235,6 +235,7 @@ export class RegisterResolver {
         register.status = status
 
         if (status === E_RegisterStatus.CHANGE || status === E_RegisterStatus.CANCEL) {
+            // Step 1: Get all UNSET schedules for this register
             const registerUnsetSchedules = await Schedule.find({
                 where: {
                     register_token: register.token,
@@ -242,6 +243,7 @@ export class RegisterResolver {
                 },
             })
 
+            // Step 2: Cancel all unset schedules and clear presence data
             for (const schedule of registerUnsetSchedules) {
                 schedule.status = E_ScheduleStatus.CANCEL
                 schedule.presence_date = null
@@ -250,6 +252,32 @@ export class RegisterResolver {
                 schedule.presence_instructor = null
                 schedule.presence_session = null
                 await schedule.save()
+            }
+
+            // Step 3: Calculate new last_schedule_date from non-canceled schedules
+            // Get all schedules for this register
+            const allSchedules = await Schedule.find({
+                where: {
+                    register_token: register.token,
+                },
+            })
+
+            // Filter out CANCEL status schedules
+            const nonCanceledSchedules = allSchedules.filter(schedule => schedule.status !== E_ScheduleStatus.CANCEL)
+
+            // Step 4: Find the latest submission_date from non-canceled schedules
+            if (nonCanceledSchedules.length > 0) {
+                const latestSchedule = nonCanceledSchedules.reduce((latest, current) => {
+                    const latestDate = new Date(latest.submission_date).getTime()
+                    const currentDate = new Date(current.submission_date).getTime()
+                    return currentDate > latestDate ? current : latest
+                })
+
+                // Update register's last_schedule_date
+                register.last_schedule_date = latestSchedule.submission_date
+            } else {
+                // If no non-canceled schedules exist, set to null
+                register.last_schedule_date = null
             }
         }
 
