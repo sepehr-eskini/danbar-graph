@@ -5,7 +5,7 @@ export class CreatePersonnelRq {
     @Field()
     full_name: string
 
-    @Field()
+    @Field({ nullable: true })
     phone_number: string
 
     @Field({ nullable: true, defaultValue: 0 })

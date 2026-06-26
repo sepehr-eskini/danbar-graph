@@ -11,7 +11,7 @@ export class CreateUserRq {
     @Field()
     full_name: string
 
-    @Field()
+    @Field({ nullable: true })
     phone_number: string
 }
 
