@@ -10,3 +10,12 @@ export class FetchTomorrowSchedulesRs {
     @Field(() => Boolean)
     is_last_session: boolean
 }
+
+@ObjectType()
+export class FetchTodaySchedulesRs {
+    @Field(() => Schedule)
+    schedule: Schedule
+
+    @Field(() => Boolean)
+    is_last_session: boolean
+}
