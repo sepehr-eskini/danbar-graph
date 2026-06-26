@@ -60,13 +60,21 @@ export class UserResolver {
         @Arg("body")
         { full_name, phone_number }: CreateUserRq,
     ): Promise<boolean> {
-        const existingUserWithPhoneNumber = await User.findOne({ where: { phone_number } })
-        if (existingUserWithPhoneNumber) throw generateHttpError("user_phone_number_already_exists")
+        // FIX: Only validate unique phone number if it is a non-empty string
+        if (phone_number) {
+            const existingUserWithPhoneNumber = await User.findOne({ where: { phone_number } })
+            if (existingUserWithPhoneNumber) throw generateHttpError("user_phone_number_already_exists")
+        }
 
         const existingUserWithFullName = await User.findOne({ where: { full_name } })
         if (existingUserWithFullName) throw generateHttpError("user_full_name_already_exists")
 
-        const user = await User.create({ full_name, phone_number, admin_token: admin.token }).save()
+        const user = await User.create({
+            full_name,
+            // FIX: If phone_number is null, store it as null instead of dropping the property
+            phone_number: phone_number === "" ? null : phone_number || null,
+            admin_token: admin.token,
+        }).save()
 
         return !!user
     }
@@ -77,6 +85,7 @@ export class UserResolver {
         const user = await User.findOne({ where: { token } })
         if (!user) throw generateHttpError("user_not_found")
 
+        // FIX: Only perform duplicate check if phone_number is an actual string value and has changed
         if (phone_number && phone_number !== user.phone_number) {
             const existingUserWithPhoneNumber = await User.findOne({ where: { phone_number } })
             if (existingUserWithPhoneNumber) throw generateHttpError("user_phone_number_already_exists")
@@ -88,7 +97,12 @@ export class UserResolver {
         }
 
         if (full_name) user.full_name = full_name
-        if (phone_number) user.phone_number = phone_number
+
+        // FIX: Explicitly handle undefined vs null.
+        // If it's explicitly null or an empty string, set the database column to null.
+        if (phone_number !== undefined) {
+            user.phone_number = phone_number === "" ? null : phone_number
+        }
 
         await user.save()
 
