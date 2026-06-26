@@ -79,9 +79,9 @@ export class Register extends BaseEntity {
     @OneToMany(() => Schedule, schedule => schedule.register)
     schedules: Schedule[]
 
-    @Field()
-    @Column({ type: "date" })
-    last_schedule_date: string
+    @Field({ nullable: true })
+    @Column({ type: "date", nullable: true })
+    last_schedule_date: string | null
 
     @Field(() => E_RegisterStatus)
     @Column({ type: "enum", enum: E_RegisterStatus, default: E_RegisterStatus.ACTIVE })
