@@ -355,8 +355,7 @@ export class ScheduleResolver {
             query.andWhere("register.payment_date = :payment_date", { payment_date })
         }
 
-        // Sort by class title first, then by the class instructor's full name
-        query.orderBy("class.title", "ASC").addOrderBy("class_instructor.full_name", "ASC")
+        query.orderBy("time_period.from_time", "ASC")
 
         const schedules = await query.getMany()
 
@@ -456,8 +455,7 @@ export class ScheduleResolver {
             query.andWhere("register.payment_date = :payment_date", { payment_date })
         }
 
-        // Sort by class title first, then by the class instructor's full name
-        query.orderBy("class.title", "ASC").addOrderBy("class_instructor.full_name", "ASC")
+        query.orderBy("time_period.from_time", "ASC")
 
         const schedules = await query.getMany()
 
