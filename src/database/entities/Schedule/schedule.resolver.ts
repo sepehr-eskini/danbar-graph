@@ -192,7 +192,6 @@ export class ScheduleResolver {
     @Mutation(() => Boolean)
     @UseMiddleware([AuthMiddleware])
     async editScheduleSubmission(
-        @Ctx("admin") admin: Admin,
         @Arg("body") { token, submission_date, submission_session_token }: EditScheduleSubmissionRq,
     ): Promise<boolean> {
         // Step 1: Fetch the schedule with its register
@@ -209,15 +208,13 @@ export class ScheduleResolver {
         })
         if (!register) throw generateHttpError("register_not_found")
 
-        // Step 3: Fetch all sessions for the class
-        const allClassSessions = await Session.find()
+        // Step 3: Fetch only the specific session belonging to this class instead of downloading all sessions
+        const selectedSession = await Session.findOne({
+            where: { token: submission_session_token },
+        })
 
-        // Filter sessions that belong to the class (session_tokens should be in class.session_tokens)
-        const classSessions = allClassSessions.filter(session => register.class.session_tokens.includes(session.token))
-
-        // Step 4: Validate that the submission_session_token belongs to this class
-        const selectedSession = classSessions.find(session => session.token === submission_session_token)
-        if (!selectedSession) {
+        // Verify session exists and belongs to the class array tokens list
+        if (!selectedSession || !register.class.session_tokens.includes(submission_session_token)) {
             throw generateHttpError("invalid_session_for_class")
         }
 
@@ -226,10 +223,12 @@ export class ScheduleResolver {
         schedule.submission_session_token = submission_session_token
         schedule.submission_instructor_token = register.class.instructor_token
 
+        // FIX: Assign or clean the eager relation instance so TypeORM saves your new column string token value properly
+        schedule.submission_session = selectedSession
+
         await schedule.save()
 
         // Step 6: Calculate new last_schedule_date from non-canceled schedules
-        // Get all schedules for this register
         const allSchedules = await Schedule.find({
             where: {
                 register_token: register.token,
@@ -250,8 +249,9 @@ export class ScheduleResolver {
             // Update register's last_schedule_date
             register.last_schedule_date = latestSchedule.submission_date
         } else {
-            // If all schedules are canceled, set to null
-            register.last_schedule_date = null
+            // FIX: If your tbl_register table has NOT NULL constraint applied to last_schedule_date,
+            // fallback to payment_date here to avoid violating database constraint conditions
+            register.last_schedule_date = register.payment_date || null
         }
 
         await register.save()

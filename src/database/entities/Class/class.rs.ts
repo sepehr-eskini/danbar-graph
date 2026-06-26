@@ -4,6 +4,15 @@ import { Session } from "../Session"
 import { Class } from "./class.entity"
 
 @ObjectType()
+export class ClassUserScheduleSummary {
+    @Field(() => Int)
+    count: number
+
+    @Field(() => [String])
+    user_names: string[]
+}
+
+@ObjectType()
 export class ClassSessionPopulation {
     @Field()
     session_token: string
@@ -13,6 +22,15 @@ export class ClassSessionPopulation {
 
     @Field(() => Int)
     population_count: number
+
+    @Field(() => ClassUserScheduleSummary)
+    one_remaining: ClassUserScheduleSummary
+
+    @Field(() => ClassUserScheduleSummary)
+    two_remaining: ClassUserScheduleSummary
+
+    @Field(() => ClassUserScheduleSummary)
+    at_least_three_remaining: ClassUserScheduleSummary
 }
 
 @ObjectType()
@@ -32,6 +50,15 @@ export class ClassSessionPopulations {
 
 @ObjectType()
 export class FetchClassListRs {
+    @Field(() => Class)
+    class: Class
+
+    @Field(() => [ClassSessionPopulation])
+    sessions: ClassSessionPopulation[]
+}
+
+@ObjectType()
+export class FetchClassByTokenRs {
     @Field(() => Class)
     class: Class
 
