@@ -68,15 +68,17 @@ export class PersonnelResolver {
         @Arg("body")
         { full_name, phone_number, income_percentage = 0, fixed_income_price = 0 }: CreatePersonnelRq,
     ): Promise<boolean> {
-        const existingPersonnelWithPhoneNumber = await Personnel.findOne({ where: { phone_number } })
-        if (existingPersonnelWithPhoneNumber) throw generateHttpError("personnel_phone_number_already_exists")
+        if (phone_number) {
+            const existingPersonnelWithPhoneNumber = await Personnel.findOne({ where: { phone_number } })
+            if (existingPersonnelWithPhoneNumber) throw generateHttpError("personnel_phone_number_already_exists")
+        }
 
         const existingPersonnelWithFullName = await Personnel.findOne({ where: { full_name } })
         if (existingPersonnelWithFullName) throw generateHttpError("personnel_full_name_already_exists")
 
         const personnel = await Personnel.create({
             full_name,
-            phone_number,
+            phone_number: phone_number === "" ? null : phone_number || null,
             income_percentage,
             fixed_income_price,
             admin_token: admin.token,
@@ -104,7 +106,9 @@ export class PersonnelResolver {
         }
 
         if (full_name) personnel.full_name = full_name
-        if (phone_number) personnel.phone_number = phone_number
+        if (phone_number !== undefined) {
+            personnel.phone_number = phone_number === "" ? null : phone_number
+        }
         if (income_percentage !== undefined) personnel.income_percentage = income_percentage
         if (fixed_income_price !== undefined) personnel.fixed_income_price = fixed_income_price
 
