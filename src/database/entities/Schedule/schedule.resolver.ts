@@ -37,11 +37,15 @@ export class ScheduleResolver {
             .leftJoinAndSelect("register.class", "class")
             .leftJoinAndSelect("class.instructor", "class_instructor")
 
-            // Join direct Schedule fields to satisfy { eager: true } properties
-            // and prevent GraphQL "Cannot return null" crashes
+            // Join direct Schedule fields to satisfy submission properties
             .leftJoinAndSelect("schedule.submission_instructor", "submission_instructor")
             .leftJoinAndSelect("schedule.submission_session", "submission_session")
             .leftJoinAndSelect("submission_session.time_period", "time_period")
+
+            // FIX: Added explicit leftJoinAndSelect for presence relations so they populate in the response
+            .leftJoinAndSelect("schedule.presence_instructor", "presence_instructor")
+            .leftJoinAndSelect("schedule.presence_session", "presence_session")
+            .leftJoinAndSelect("presence_session.time_period", "presence_time_period")
 
         // 2. Apply filtering parameters for direct Schedule table fields
         if (submission_date) {
@@ -105,10 +109,20 @@ export class ScheduleResolver {
         // Step 2: Update schedule status
         schedule.status = status
 
+        const newSession = await Session.findOne({
+            where: { token: schedule.submission_session_token },
+        })
+
+        const newInstructor = await Personnel.findOne({
+            where: { token: schedule.submission_instructor_token },
+        })
+
         if (status === E_ScheduleStatus.PRESENT) {
             schedule.presence_date = schedule.submission_date
             schedule.presence_session_token = schedule.submission_session_token
             schedule.presence_instructor_token = schedule.submission_instructor_token
+            schedule.presence_session = newSession
+            schedule.presence_instructor = newInstructor
         }
 
         if (status !== E_ScheduleStatus.PRESENT) {
@@ -127,28 +141,20 @@ export class ScheduleResolver {
         })
 
         if (register) {
-            // Get all schedules for this register
             const allSchedules = await Schedule.find({
-                where: {
-                    register_token: register.token,
-                },
+                where: { register_token: register.token },
             })
 
-            // Filter out CANCEL status schedules
             const nonCanceledSchedules = allSchedules.filter(sched => sched.status !== E_ScheduleStatus.CANCEL)
 
-            // Find the latest submission_date from non-canceled schedules
             if (nonCanceledSchedules.length > 0) {
                 const latestSchedule = nonCanceledSchedules.reduce((latest, current) => {
                     const latestDate = new Date(latest.submission_date).getTime()
                     const currentDate = new Date(current.submission_date).getTime()
                     return currentDate > latestDate ? current : latest
                 })
-
-                // Update register's last_schedule_date
                 register.last_schedule_date = latestSchedule.submission_date
             } else {
-                // If all schedules are canceled, set to null
                 register.last_schedule_date = null
             }
 
@@ -169,19 +175,23 @@ export class ScheduleResolver {
         if (schedule.status !== E_ScheduleStatus.PRESENT && schedule.status !== E_ScheduleStatus.OFFSET)
             throw generateHttpError("internal_server_error")
 
-        const presenceSession = await Session.findOne({ where: { token: presence_session_token } })
-        const presenceInstructor = await Personnel.findOne({ where: { token: presence_instructor_token } })
-
         if (presence_date) schedule.presence_date = presence_date
 
+        // FIX: Consistently assign both the column token AND the loaded object reference
         if (presence_session_token) {
-            schedule.presence_session_token = presence_session_token
-            schedule.presence_session = presenceSession
+            const presenceSession = await Session.findOne({ where: { token: presence_session_token } })
+            if (presenceSession) {
+                schedule.presence_session_token = presence_session_token
+                schedule.presence_session = presenceSession
+            }
         }
 
         if (presence_instructor_token) {
-            schedule.presence_instructor_token = presence_instructor_token
-            schedule.presence_instructor = presenceInstructor
+            const presenceInstructor = await Personnel.findOne({ where: { token: presence_instructor_token } })
+            if (presenceInstructor) {
+                schedule.presence_instructor_token = presence_instructor_token
+                schedule.presence_instructor = presenceInstructor
+            }
         }
 
         await schedule.save()
