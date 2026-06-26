@@ -153,19 +153,22 @@ export class ClassResolver {
                 for (const reg of registers) {
                     if (!reg.user) continue
 
-                    const unsetSchedules = (reg.schedules || []).filter(s => s.status === E_ScheduleStatus.UNSET)
+                    // 1. Get ONLY the UNSET schedules that belong strictly to THIS session
+                    const sessionSpecificUnsetSchedules = (reg.schedules || []).filter(
+                        s => s.status === E_ScheduleStatus.UNSET && s.submission_session_token === session.token,
+                    )
 
-                    const matchesSession = unsetSchedules.some(s => s.submission_session_token === session.token)
+                    const sessionUnsetCount = sessionSpecificUnsetSchedules.length
 
-                    if (matchesSession) {
-                        population_count++
-                        const totalUnsetCount = unsetSchedules.length
+                    if (sessionUnsetCount > 0) {
+                        population_count++ // User has active schedules here, increment population
 
-                        if (totalUnsetCount === 1) {
+                        // 2. Classify based on the counts SPECIFIC to this session
+                        if (sessionUnsetCount === 1) {
                             namesOneRemaining.push(reg.user.full_name)
-                        } else if (totalUnsetCount === 2) {
+                        } else if (sessionUnsetCount === 2) {
                             namesTwoRemaining.push(reg.user.full_name)
-                        } else if (totalUnsetCount >= 3) {
+                        } else if (sessionUnsetCount >= 3) {
                             namesThreeOrMore.push(reg.user.full_name)
                         }
                     }
