@@ -52,6 +52,10 @@ export class Register extends BaseEntity {
     price: Price
 
     @Field()
+    @Column({ type: "numeric" })
+    class_price: number
+
+    @Field()
     @Column()
     admin_token: string
 

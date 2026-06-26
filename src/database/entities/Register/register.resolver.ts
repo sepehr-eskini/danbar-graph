@@ -91,6 +91,7 @@ export class RegisterResolver {
             user_token,
             class_token,
             price_token,
+            class_price: price.price,
             payment_date,
             payment_price,
             discount_price,
