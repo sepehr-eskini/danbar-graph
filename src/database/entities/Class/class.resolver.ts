@@ -19,6 +19,7 @@ import {
     FetchActiveClassListRq,
     FetchClassByTokenRq,
     FetchClassListRq,
+    FetchClassPricesByTokenRq,
     FetchClassPricesRq,
     ToggleClassStatus,
 } from "./class.rq"
@@ -264,6 +265,24 @@ export class ClassResolver {
                 ...(is_active !== undefined && { is_active }),
             },
             order: { created_at: "DESC" },
+        })
+
+        return prices
+    }
+
+    @Query(() => [Price])
+    @UseMiddleware([AuthMiddleware])
+    async fetchClassPricesByToken(@Arg("body") { token }: FetchClassPricesByTokenRq): Promise<Price[]> {
+        const classEntity = await Class.findOne({ where: { token } })
+        if (!classEntity) throw generateHttpError("class_not_found")
+
+        const prices = await Price.find({
+            where: {
+                class_token: token,
+                is_active: true,
+            },
+            relations: ["class"],
+            order: { sessions_count: "ASC" },
         })
 
         return prices

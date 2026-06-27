@@ -76,3 +76,9 @@ export class FetchClassByTokenRq {
     @Field()
     token: string
 }
+
+@InputType()
+export class FetchClassPricesByTokenRq {
+    @Field()
+    token: string
+}
