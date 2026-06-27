@@ -47,5 +47,6 @@ export const ErrorMessages: T_ErrorMessages = {
         // Schedule
         schedule_not_found: "برنامه در سیستم وجود ندارد",
         invalid_session_for_class: "سانس انتخابی برای کلاس وجود ندارد",
+        schedule_already_exists: "برنامه با تاریخ و سانس مورد نظر از قبل تعریف شده است",
     },
 }

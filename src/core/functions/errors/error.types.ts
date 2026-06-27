@@ -44,6 +44,7 @@ export type T_Error =
     // Schedule
     | "schedule_not_found"
     | "invalid_session_for_class"
+    | "schedule_already_exists"
 
 export type T_ErrorMessage = {
     [key in T_Error]: string

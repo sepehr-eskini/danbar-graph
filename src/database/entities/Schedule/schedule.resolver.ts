@@ -5,7 +5,7 @@ import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql
 import { Admin } from "typeorm"
 
 import { Personnel } from "../Personnel"
-import { Register } from "../Register"
+import { E_RegisterStatus, Register } from "../Register"
 import { Session } from "../Session"
 import { Schedule } from "./schedule.entity"
 import { EditScheduleRq, EditScheduleSubmissionRq, FetchScheduleListRq, SetScheduleRq } from "./schedule.rq"
@@ -145,7 +145,11 @@ export class ScheduleResolver {
                 where: { register_token: register.token },
             })
 
-            const nonCanceledSchedules = allSchedules.filter(sched => sched.status !== E_ScheduleStatus.CANCEL)
+            const nonCanceledSchedules = allSchedules.filter(_ => _.status !== E_ScheduleStatus.CANCEL)
+
+            const canceledOrUnsetSchedules = allSchedules.filter(
+                _ => _.status === E_ScheduleStatus.CANCEL || _.status === E_ScheduleStatus.UNSET,
+            )
 
             if (nonCanceledSchedules.length > 0) {
                 const latestSchedule = nonCanceledSchedules.reduce((latest, current) => {
@@ -156,6 +160,12 @@ export class ScheduleResolver {
                 register.last_schedule_date = latestSchedule.submission_date
             } else {
                 register.last_schedule_date = null
+            }
+
+            if (canceledOrUnsetSchedules.length === 0) {
+                register.status = E_RegisterStatus.FINISH
+            } else {
+                register.status = E_RegisterStatus.ACTIVE
             }
 
             await register.save()
