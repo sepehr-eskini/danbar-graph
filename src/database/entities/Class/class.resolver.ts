@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-plusplus */
 /* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
@@ -119,14 +120,29 @@ export class ClassResolver {
     @Query(() => [FetchClassListRs])
     @UseMiddleware([AuthMiddleware])
     async fetchClassList(@Arg("body", { nullable: true }) body?: FetchClassListRq): Promise<FetchClassListRs[]> {
-        const title = body?.title
+        const whereConditions: Record<string, any> = {}
 
-        // FIX: Added explicit leftJoinAndSelect for prices relation paths to prevent QueryBuilder from dropping them
+        if (body?.title) {
+            whereConditions.title = Like(`%${body.title}%`)
+        }
+
+        if (body?.type) {
+            whereConditions.type = body.type
+        }
+
+        if (body?.instructor_token) {
+            whereConditions.instructor_token = body.instructor_token
+        }
+
+        if (body?.is_active !== undefined) {
+            whereConditions.is_active = body.is_active
+        }
+
         const classes = await Class.createQueryBuilder("class")
             .leftJoinAndSelect("class.instructor", "instructor")
             .leftJoinAndSelect("class.prices", "prices")
-            .where(title ? "class.title LIKE :title" : "1=1", { title: `%${title}%` })
-            .orderBy("class.title", "ASC")
+            .where(whereConditions)
+            .orderBy("class.is_active", "DESC")
             .addOrderBy("class.type", "ASC")
             .addOrderBy("instructor.full_name", "ASC")
             .getMany()
